@@ -14,7 +14,6 @@ class _StoreRegistrationState extends State<StoreRegistration> {
   final _formKey = GlobalKey<FormState>();
   File? _storeImage;
 
-  // Controllers for the text fields
   final TextEditingController _aadharController = TextEditingController();
   final TextEditingController _gstController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -28,7 +27,7 @@ class _StoreRegistrationState extends State<StoreRegistration> {
 
   Future<void> _registerStore() async {
     if (!_formKey.currentState!.validate()) {
-      return; // Stop if the form is not valid
+      return;
     }
     if (_storeImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -43,8 +42,7 @@ class _StoreRegistrationState extends State<StoreRegistration> {
         'gstNumber': _gstController.text,
         'email': _emailController.text,
         'password': _passwordController.text,
-        'storeImage':
-            'Uploaded Image URL or Path', // Replace with image upload logic if required
+        'storeImage': 'Uploaded Image URL or Path',
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Store registered successfully!')),
@@ -64,14 +62,15 @@ class _StoreRegistrationState extends State<StoreRegistration> {
         centerTitle: true,
         title: const Text('Store Registration'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
-            child: Center(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const Text(
                     'Upload Store Image',
@@ -82,8 +81,10 @@ class _StoreRegistrationState extends State<StoreRegistration> {
                   const SizedBox(height: 20),
                   TextFormField(
                     controller: _aadharController,
-                    decoration:
-                        const InputDecoration(labelText: 'Aadhar Number'),
+                    decoration: const InputDecoration(
+                      labelText: 'Aadhar Number',
+                      border: OutlineInputBorder(),
+                    ),
                     keyboardType: TextInputType.number,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -98,7 +99,10 @@ class _StoreRegistrationState extends State<StoreRegistration> {
                   const SizedBox(height: 10),
                   TextFormField(
                     controller: _gstController,
-                    decoration: const InputDecoration(labelText: 'GST Number'),
+                    decoration: const InputDecoration(
+                      labelText: 'GST Number',
+                      border: OutlineInputBorder(),
+                    ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter GST number';
@@ -109,7 +113,10 @@ class _StoreRegistrationState extends State<StoreRegistration> {
                   const SizedBox(height: 10),
                   TextFormField(
                     controller: _emailController,
-                    decoration: const InputDecoration(labelText: 'Email'),
+                    decoration: const InputDecoration(
+                      labelText: 'Email',
+                      border: OutlineInputBorder(),
+                    ),
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -124,7 +131,10 @@ class _StoreRegistrationState extends State<StoreRegistration> {
                   const SizedBox(height: 10),
                   TextFormField(
                     controller: _passwordController,
-                    decoration: const InputDecoration(labelText: 'Password'),
+                    decoration: const InputDecoration(
+                      labelText: 'Password',
+                      border: OutlineInputBorder(),
+                    ),
                     obscureText: true,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -137,11 +147,18 @@ class _StoreRegistrationState extends State<StoreRegistration> {
                     },
                   ),
                   const SizedBox(height: 20),
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: _registerStore,
-                      child: const Text('Register Store'),
+                  ElevatedButton(
+                    onPressed: _registerStore,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 30,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
+                    child: const Text('Register Store'),
                   ),
                 ],
               ),
