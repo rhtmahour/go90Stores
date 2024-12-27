@@ -1,7 +1,61 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'store_image_picker.dart'; // Import the StoreImagePicker file
 
-class StoreRegistration extends StatelessWidget {
+class StoreRegistration extends StatefulWidget {
   const StoreRegistration({super.key});
+
+  @override
+  State<StoreRegistration> createState() => _StoreRegistrationState();
+}
+
+class _StoreRegistrationState extends State<StoreRegistration> {
+  final _formKey = GlobalKey<FormState>();
+  File? _storeImage;
+
+  // Controllers for the text fields
+  final TextEditingController _aadharController = TextEditingController();
+  final TextEditingController _gstController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  void _setImage(File pickedImage) {
+    setState(() {
+      _storeImage = pickedImage;
+    });
+  }
+
+  Future<void> _registerStore() async {
+    if (!_formKey.currentState!.validate()) {
+      return; // Stop if the form is not valid
+    }
+    if (_storeImage == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please upload a store image.')),
+      );
+      return;
+    }
+
+    try {
+      await FirebaseFirestore.instance.collection('stores').add({
+        'aadharNumber': _aadharController.text,
+        'gstNumber': _gstController.text,
+        'email': _emailController.text,
+        'password': _passwordController.text,
+        'storeImage':
+            'Uploaded Image URL or Path', // Replace with image upload logic if required
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Store registered successfully!')),
+      );
+      _formKey.currentState!.reset();
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $error')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -9,6 +63,91 @@ class StoreRegistration extends StatelessWidget {
       appBar: AppBar(
         centerTitle: true,
         title: const Text('Store Registration'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Center(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Upload Store Image',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10),
+                  StoreImagePicker(onImagePicked: _setImage),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    controller: _aadharController,
+                    decoration:
+                        const InputDecoration(labelText: 'Aadhar Number'),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter Aadhar number';
+                      }
+                      if (value.length != 12) {
+                        return 'Aadhar number must be 12 digits';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: _gstController,
+                    decoration: const InputDecoration(labelText: 'GST Number'),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter GST number';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: const InputDecoration(labelText: 'Email'),
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter email';
+                      }
+                      if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                        return 'Please enter a valid email';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: _passwordController,
+                    decoration: const InputDecoration(labelText: 'Password'),
+                    obscureText: true,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter password';
+                      }
+                      if (value.length < 6) {
+                        return 'Password must be at least 6 characters long';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: _registerStore,
+                      child: const Text('Register Store'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
