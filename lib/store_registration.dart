@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:go90stores/adminlogin.dart';
 import 'store_image_picker.dart'; // Import the StoreImagePicker file
 
 class StoreRegistration extends StatefulWidget {
@@ -48,6 +49,11 @@ class _StoreRegistrationState extends State<StoreRegistration> {
         const SnackBar(content: Text('Store registered successfully!')),
       );
       _formKey.currentState!.reset();
+      // Navigate to the AdminLogin screen
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const AdminLogin()),
+      );
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $error')),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go90stores/myhome.dart';
+import 'package:go90stores/mystore.dart';
 import 'package:go90stores/store_registration.dart';
 
 class AdminLogin extends StatefulWidget {
@@ -16,6 +18,7 @@ class _AdminLoginState extends State<AdminLogin> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   bool _isLoading = false;
 
   @override
@@ -37,15 +40,39 @@ class _AdminLoginState extends State<AdminLogin> {
     });
 
     try {
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
+      if (_showAdminLogin) {
+        // Admin Login using Firebase Authentication
+        UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const MyHome()),
-      );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const MyHome()),
+        );
+      } else {
+        // Store Login using Firestore
+        final email = _emailController.text.trim();
+        final password = _passwordController.text.trim();
+
+        final querySnapshot = await _firestore
+            .collection('stores')
+            .where('email', isEqualTo: email)
+            .where('password', isEqualTo: password)
+            .get();
+
+        if (querySnapshot.docs.isNotEmpty) {
+          // Valid store credentials
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const MyStore()),
+          );
+        } else {
+          // Invalid credentials
+          throw Exception('Invalid email or password for Store Login.');
+        }
+      }
     } on FirebaseAuthException catch (e) {
       String errorMessage = "An error occurred. Please try again.";
       if (e.code == 'user-not-found') {
@@ -57,6 +84,13 @@ class _AdminLoginState extends State<AdminLogin> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(errorMessage),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
           backgroundColor: Colors.red,
         ),
       );
