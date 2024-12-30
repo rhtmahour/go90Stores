@@ -51,17 +51,24 @@ class MyStore extends StatelessWidget {
         centerTitle: true,
         title: Text(
           'My Store',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSecondary,
-              ),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Theme.of(context).colorScheme.secondary,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blue, Colors.purple],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
         actions: [
-          IconButton(
-            color: Theme.of(context).colorScheme.onSecondaryFixedVariant,
+          TextButton(
             onPressed: () => _signOut(context),
-            icon: const Icon(Icons.logout),
-            tooltip: 'Logout',
+            child: const Text(
+              'Logout',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),

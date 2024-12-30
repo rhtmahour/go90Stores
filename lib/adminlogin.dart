@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:go90stores/myhome.dart';
+import 'package:go90stores/admindashboard.dart';
 import 'package:go90stores/mystore.dart';
 import 'package:go90stores/store_registration.dart';
 
@@ -49,7 +49,7 @@ class _AdminLoginState extends State<AdminLogin> {
 
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const MyHome()),
+          MaterialPageRoute(builder: (context) => const AdminDashboard()),
         );
       } else {
         // Store Login using Firestore
