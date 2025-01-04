@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:csv/csv.dart';
 import 'dart:io';
 import 'dart:convert';
+import 'package:shimmer/shimmer.dart';
 
 import 'adminlogin.dart';
 
@@ -17,7 +18,6 @@ class MyStore extends StatefulWidget {
 class _MyStoreState extends State<MyStore> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   List<Map<String, String>> _products = [];
-  String _uploadMessage = '';
 
   Future<void> _signOut(BuildContext context) async {
     final bool? confirmLogout = await showDialog<bool>(
@@ -64,11 +64,9 @@ class _MyStoreState extends State<MyStore> {
             .transform(utf8.decoder)
             .transform(CsvToListConverter(eol: '\n'))
             .toList();
-        print(fields);
 
         if (fields.isNotEmpty) {
           setState(() {
-            // Skip header row, map data, and handle missing fields
             _products = fields.skip(1).map((row) {
               return {
                 'Name of item': row.length > 1 ? row[1]?.toString() ?? '' : '',
@@ -76,26 +74,28 @@ class _MyStoreState extends State<MyStore> {
                     row.length > 2 ? row[2]?.toString() ?? '' : '',
                 'Sale Price': row.length > 3 ? row[3]?.toString() ?? '' : '',
                 'Description': row.length > 6 ? row[6]?.toString() ?? '' : '',
-                'Product Image': row.length > 7 ? row[7]?.toString() ?? '' : '',
+                'Product Image':
+                    row.length > 7 ? row[7]?.toString().trim() ?? '' : '',
               };
             }).toList();
-            _uploadMessage = "File uploaded successfully!";
           });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("File uploaded successfully!")),
+          );
         } else {
-          setState(() {
-            _uploadMessage = "CSV file is empty or invalid!";
-          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("CSV file is empty or invalid!")),
+          );
         }
       } catch (e) {
-        print('Error parsing CSV: $e');
-        setState(() {
-          _uploadMessage = "Error processing file: $e";
-        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error processing file: $e")),
+        );
       }
     } else {
-      setState(() {
-        _uploadMessage = "No file selected.";
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("No file selected.")),
+      );
     }
   }
 
@@ -104,10 +104,8 @@ class _MyStoreState extends State<MyStore> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text(
-          'My Store',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: const Text('My Store',
+            style: TextStyle(fontWeight: FontWeight.bold)),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -136,48 +134,100 @@ class _MyStoreState extends State<MyStore> {
               onPressed: _uploadCsvFile,
               child: const Text('Upload CSV File'),
             ),
-            if (_uploadMessage.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16.0),
-                child: Text(
-                  _uploadMessage,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.green,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
+            const SizedBox(height: 16),
             Expanded(
-              child: ListView.builder(
-                itemCount: _products.length,
-                itemBuilder: (context, index) {
-                  final product = _products[index];
-                  return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: ListTile(
-                      leading: product['Product Image']!.isNotEmpty
-                          ? Image.network(
-                              product['Product Image']!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(Icons.broken_image),
-                            )
-                          : const Icon(Icons.image),
-                      title: Text(product['Name of item']!),
-                      subtitle: Text(
-                        "Purchase Price: \$${product['Purchase Price']}\n"
-                        "Sale Price: \$${product['Sale Price']}\n"
-                        "Description: ${product['Description']}",
-                      ),
+              child: _products.isEmpty
+                  ? const Center(child: Text('No products to display'))
+                  : ListView.builder(
+                      itemCount: _products.length,
+                      itemBuilder: (context, index) {
+                        return ProductCard(product: _products[index]);
+                      },
                     ),
-                  );
-                },
-              ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class ProductCard extends StatelessWidget {
+  final Map<String, String> product;
+
+  const ProductCard({super.key, required this.product});
+
+  @override
+  Widget build(BuildContext context) {
+    String imageUrl = product['Product Image']!.trim();
+
+    return Card(
+      elevation: 4,
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            child: imageUrl.isNotEmpty
+                ? Image.network(
+                    imageUrl,
+                    height: 150,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, progress) {
+                      if (progress == null) return child;
+                      return Shimmer.fromColors(
+                        baseColor: Colors.grey[300]!,
+                        highlightColor: Colors.grey[100]!,
+                        child: Container(
+                          height: 150,
+                          color: Colors.white,
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) => Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(Icons.broken_image, size: 150, color: Colors.grey),
+                        Text('Image Not Found'),
+                      ],
+                    ),
+                  )
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Icon(Icons.image_not_supported,
+                          size: 150, color: Colors.grey),
+                      Text('No Image Available'),
+                    ],
+                  ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  product['Name of item']!,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Purchase Price: \RS.${product['Purchase Price']}\n"
+                  "Sale Price: \RS.${product['Sale Price']}\n"
+                  "Description: ${product['Description']}",
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
