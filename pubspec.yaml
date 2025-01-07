@@ -44,11 +44,18 @@ dependencies:
   provider: ^6.1.2
   path_provider: ^2.1.5
   shimmer: ^3.0.0
+  flutter_launcher_icons: ^0.14.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/store.png"
+  min_sdk_version: 23
+  adaptive_icon_background: "#ffffff"
+  adaptive_icon_foreground: "assets/images/store.png"
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your
@@ -69,7 +76,8 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/placeholder.png
+    - assets/images/placeholder.png
+    - assets/images/store.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

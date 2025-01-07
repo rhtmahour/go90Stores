@@ -140,6 +140,8 @@ class AdminDashboard extends StatelessWidget {
                           }
 
                           final storeDocs = snapshot.data!.docs;
+                          print(
+                              'Store data: ${storeDocs.map((doc) => doc.data()).toList()}'); // Debugging line
 
                           return ListView.builder(
                             itemCount: storeDocs.length,
@@ -186,19 +188,19 @@ class AdminDashboard extends StatelessWidget {
                                           ),
                                         ),
                                         const SizedBox(width: 8),
-                                        if (data['approved'] == true)
+                                        if (data['status'] == 'Approved')
                                           const Icon(
                                             Icons.verified,
                                             color: Colors.blue,
                                             size: 18,
                                           )
-                                        else if (data['pending'] == true)
+                                        else if (data['status'] == 'Pending')
                                           const Icon(
                                             Icons.pending,
                                             color: Colors.orange,
                                             size: 18,
                                           )
-                                        else if (data['rejected'] == true)
+                                        else if (data['status'] == 'Rejected')
                                           const Icon(
                                             Icons.close,
                                             color: Colors.red,
@@ -215,7 +217,27 @@ class AdminDashboard extends StatelessWidget {
                                         color: Colors.grey,
                                       ),
                                       onSelected: (String value) async {
-                                        // Handle Approval, Pending, Rejected logic
+                                        final storeId = store.id;
+                                        try {
+                                          await FirebaseFirestore.instance
+                                              .collection('stores')
+                                              .doc(storeId)
+                                              .update({'status': value});
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                                content: Text(
+                                                    'Status updated to $value')),
+                                          );
+                                        } catch (e) {
+                                          print('Error updating status: $e');
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                                content: Text(
+                                                    'Error updating status: $e')),
+                                          );
+                                        }
                                       },
                                       itemBuilder: (BuildContext context) =>
                                           <PopupMenuEntry<String>>[
@@ -252,7 +274,7 @@ class AdminDashboard extends StatelessWidget {
                             children: [
                               _buildActivityCard(
                                 title: "Total Sales",
-                                value: "\$12,345",
+                                value: "\$.12,345",
                                 icon: Icons.attach_money,
                                 color: Colors.green,
                               ),
