@@ -1,3 +1,4 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:file_picker/file_picker.dart';
@@ -5,7 +6,6 @@ import 'package:csv/csv.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:shimmer/shimmer.dart';
-
 import 'adminlogin.dart';
 
 class MyStore extends StatefulWidget {
@@ -66,19 +66,25 @@ class _MyStoreState extends State<MyStore> {
             .toList();
 
         if (fields.isNotEmpty) {
+          final products = fields.skip(1).map((row) {
+            return {
+              'name': row.length > 1 ? row[1]?.toString() ?? '' : '',
+              'salePrice': row.length > 2 ? row[2]?.toString() ?? '' : '',
+              'purchasePrice': row.length > 3 ? row[3]?.toString() ?? '' : '',
+              'description': row.length > 6 ? row[6]?.toString() ?? '' : '',
+              'productImage':
+                  row.length > 7 ? row[7]?.toString().trim() ?? '' : '',
+            };
+          }).toList();
+
+          // Upload to Firebase Realtime Database
+          final databaseRef = FirebaseDatabase.instance.ref('products');
+          await databaseRef.set(products);
+
           setState(() {
-            _products = fields.skip(1).map((row) {
-              return {
-                'Name of item': row.length > 1 ? row[1]?.toString() ?? '' : '',
-                'Purchase Price':
-                    row.length > 2 ? row[2]?.toString() ?? '' : '',
-                'Sale Price': row.length > 3 ? row[3]?.toString() ?? '' : '',
-                'Description': row.length > 6 ? row[6]?.toString() ?? '' : '',
-                'Product Image':
-                    row.length > 7 ? row[7]?.toString().trim() ?? '' : '',
-              };
-            }).toList();
+            _products = products;
           });
+
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("File uploaded successfully!")),
           );
@@ -96,6 +102,30 @@ class _MyStoreState extends State<MyStore> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("No file selected.")),
       );
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProductsFromFirebase();
+  }
+
+  Future<void> _fetchProductsFromFirebase() async {
+    final databaseRef = FirebaseDatabase.instance.ref('products');
+    final snapshot = await databaseRef.get();
+
+    if (snapshot.exists && snapshot.value != null) {
+      final List<Map<String, String>> products = List<Map<String, String>>.from(
+        (snapshot.value as List).map((item) => Map<String, String>.from(item)),
+      );
+      setState(() {
+        _products = products;
+      });
+    } else {
+      setState(() {
+        _products = [];
+      });
     }
   }
 
@@ -159,7 +189,7 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String imageUrl = product['Product Image']!.trim();
+    String imageUrl = product['productImage']?.trim() ?? '';
 
     return Card(
       elevation: 4,
@@ -212,7 +242,7 @@ class ProductCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  product['Name of item']!,
+                  product['name'] ?? 'Unknown Product',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
@@ -220,9 +250,9 @@ class ProductCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "Purchase Price: \RS.${product['Purchase Price']}\n"
-                  "Sale Price: \RS.${product['Sale Price']}\n"
-                  "Description: ${product['Description']}",
+                  "Purchase Price: \RS.${product['purchasePrice'] ?? 'N/A'}\n"
+                  "Sale Price: \RS.${product['salePrice'] ?? 'N/A'}\n"
+                  "Description: ${product['description'] ?? 'No Description'}",
                 ),
               ],
             ),
