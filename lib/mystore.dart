@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:csv/csv.dart';
+import 'package:go90stores/productcard.dart';
 import 'dart:io';
 import 'dart:convert';
-import 'package:shimmer/shimmer.dart';
 import 'adminlogin.dart';
 
 class MyStore extends StatefulWidget {
@@ -66,8 +66,12 @@ class _MyStoreState extends State<MyStore> {
             .toList();
 
         if (fields.isNotEmpty) {
-          final products = fields.skip(1).map((row) {
-            return {
+          final databaseRef = FirebaseDatabase.instance.ref('products');
+          final products = fields.skip(1).map((row) async {
+            String? productId = row.length > 0
+                ? row[0]?.toString()
+                : null; // Assuming ID is in the first column
+            final product = {
               'name': row.length > 1 ? row[1]?.toString() ?? '' : '',
               'salePrice': row.length > 2 ? row[2]?.toString() ?? '' : '',
               'purchasePrice': row.length > 3 ? row[3]?.toString() ?? '' : '',
@@ -75,14 +79,25 @@ class _MyStoreState extends State<MyStore> {
               'productImage':
                   row.length > 7 ? row[7]?.toString().trim() ?? '' : '',
             };
+
+            if (productId != null && productId.isNotEmpty) {
+              // Update existing product
+              await databaseRef.child(productId).update(product);
+            } else {
+              // Generate a new product ID
+              final newProductRef = databaseRef.push();
+              await newProductRef.set(product);
+              productId = newProductRef.key;
+            }
+
+            product['key'] = productId!;
+            return product;
           }).toList();
 
-          // Upload to Firebase Realtime Database
-          final databaseRef = FirebaseDatabase.instance.ref('products');
-          await databaseRef.set(products);
+          final resolvedProducts = await Future.wait(products);
 
           setState(() {
-            _products = products;
+            _products = resolvedProducts;
           });
 
           ScaffoldMessenger.of(context).showSnackBar(
@@ -116,9 +131,19 @@ class _MyStoreState extends State<MyStore> {
     final snapshot = await databaseRef.get();
 
     if (snapshot.exists && snapshot.value != null) {
-      final List<Map<String, String>> products = List<Map<String, String>>.from(
-        (snapshot.value as List).map((item) => Map<String, String>.from(item)),
-      );
+      final List<Map<String, String>> products = [];
+      Map<String, dynamic> data = snapshot.value as Map<String, dynamic>;
+      data.forEach((key, value) {
+        products.add({
+          'key': key,
+          'name': value['name'] ?? '',
+          'salePrice': value['salePrice'] ?? '',
+          'purchasePrice': value['purchasePrice'] ?? '',
+          'description': value['description'] ?? '',
+          'productImage': value['productImage'] ?? '',
+        });
+      });
+
       setState(() {
         _products = products;
       });
@@ -177,87 +202,6 @@ class _MyStoreState extends State<MyStore> {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class ProductCard extends StatelessWidget {
-  final Map<String, String> product;
-
-  const ProductCard({super.key, required this.product});
-
-  @override
-  Widget build(BuildContext context) {
-    String imageUrl = product['productImage']?.trim() ?? '';
-
-    return Card(
-      elevation: 4,
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-            child: imageUrl.isNotEmpty
-                ? Image.network(
-                    imageUrl,
-                    height: 150,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, progress) {
-                      if (progress == null) return child;
-                      return Shimmer.fromColors(
-                        baseColor: Colors.grey[300]!,
-                        highlightColor: Colors.grey[100]!,
-                        child: Container(
-                          height: 150,
-                          color: Colors.white,
-                        ),
-                      );
-                    },
-                    errorBuilder: (context, error, stackTrace) => Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Icon(Icons.broken_image, size: 150, color: Colors.grey),
-                        Text('Image Not Found'),
-                      ],
-                    ),
-                  )
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Icon(Icons.image_not_supported,
-                          size: 150, color: Colors.grey),
-                      Text('No Image Available'),
-                    ],
-                  ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  product['name'] ?? 'Unknown Product',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  "Purchase Price: \RS.${product['purchasePrice'] ?? 'N/A'}\n"
-                  "Sale Price: \RS.${product['salePrice'] ?? 'N/A'}\n"
-                  "Description: ${product['description'] ?? 'No Description'}",
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

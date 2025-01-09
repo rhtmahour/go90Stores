@@ -107,6 +107,7 @@ class _AdminLoginState extends State<AdminLogin> {
     final cardWidth = screenWidth < 600 ? screenWidth * 0.9 : 400;
 
     return Scaffold(
+      backgroundColor: Colors.grey[200],
       body: Center(
         child: SingleChildScrollView(
           padding: EdgeInsets.symmetric(
