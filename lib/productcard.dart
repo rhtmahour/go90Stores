@@ -4,8 +4,9 @@ import 'package:shimmer/shimmer.dart';
 
 class ProductCard extends StatelessWidget {
   final Map<String, String> product;
+  final Function() onUpdate;
 
-  const ProductCard({super.key, required this.product});
+  const ProductCard({super.key, required this.product, required this.onUpdate});
 
   @override
   Widget build(BuildContext context) {
@@ -95,14 +96,14 @@ class ProductCard extends StatelessWidget {
                           context, 'Sale Price', product['salePrice'],
                           (newValue) {
                         _updateProductPrice(
-                            context, product, 'salePrice', newValue);
+                            context, product['key']!, 'salePrice', newValue);
                       });
                     } else if (value == 'Edit Purchase Price') {
                       _showEditDialog(
                           context, 'Purchase Price', product['purchasePrice'],
                           (newValue) {
-                        _updateProductPrice(
-                            context, product, 'purchasePrice', newValue);
+                        _updateProductPrice(context, product['key']!,
+                            'purchasePrice', newValue);
                       });
                     }
                   },
@@ -158,25 +159,19 @@ class ProductCard extends StatelessWidget {
     );
   }
 
-  void _updateProductPrice(BuildContext context, Map<String, String> product,
-      String field, String newValue) async {
+  void _updateProductPrice(
+      BuildContext context, String key, String field, String newValue) async {
     final databaseRef = FirebaseDatabase.instance.ref('products');
-    final key = product['key'];
 
-    if (key != null && key.isNotEmpty) {
-      try {
-        await databaseRef.child(key).update({field: newValue});
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Product price updated successfully!')),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating product: $e')),
-        );
-      }
-    } else {
+    try {
+      await databaseRef.child(key).update({field: newValue});
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid product key. Unable to update.')),
+        const SnackBar(content: Text('Product price updated successfully!')),
+      );
+      onUpdate(); // Call the callback after updating the price
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating product: $e')),
       );
     }
   }

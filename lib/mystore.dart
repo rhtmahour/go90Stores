@@ -57,60 +57,48 @@ class _MyStoreState extends State<MyStore> {
     );
 
     if (result != null && result.files.single.path != null) {
-      try {
-        final path = result.files.single.path!;
-        final input = File(path).openRead();
-        final fields = await input
-            .transform(utf8.decoder)
-            .transform(CsvToListConverter(eol: '\n'))
-            .toList();
+      final path = result.files.single.path!;
+      final input = File(path).openRead();
+      final fields = await input
+          .transform(utf8.decoder)
+          .transform(CsvToListConverter(eol: '\n'))
+          .toList();
 
-        if (fields.isNotEmpty) {
-          final databaseRef = FirebaseDatabase.instance.ref('products');
-          final products = fields.skip(1).map((row) async {
-            String? productId = row.length > 0
-                ? row[0]?.toString()
-                : null; // Assuming ID is in the first column
-            final product = {
-              'name': row.length > 1 ? row[1]?.toString() ?? '' : '',
-              'salePrice': row.length > 2 ? row[2]?.toString() ?? '' : '',
-              'purchasePrice': row.length > 3 ? row[3]?.toString() ?? '' : '',
-              'description': row.length > 6 ? row[6]?.toString() ?? '' : '',
-              'productImage':
-                  row.length > 7 ? row[7]?.toString().trim() ?? '' : '',
-            };
+      if (fields.isNotEmpty) {
+        final databaseRef = FirebaseDatabase.instance.ref('products');
+        final existingProducts = await databaseRef.get();
 
-            if (productId != null && productId.isNotEmpty) {
-              // Update existing product
-              await databaseRef.child(productId).update(product);
-            } else {
-              // Generate a new product ID
-              final newProductRef = databaseRef.push();
-              await newProductRef.set(product);
-              productId = newProductRef.key;
-            }
-
-            product['key'] = productId!;
-            return product;
-          }).toList();
-
-          final resolvedProducts = await Future.wait(products);
-
-          setState(() {
-            _products = resolvedProducts;
-          });
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("File uploaded successfully!")),
+        if (existingProducts.exists) {
+          final bool? overwrite = await showDialog<bool>(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: const Text("Overwrite Products"),
+                content: const Text(
+                    "Products already exist. Do you want to overwrite them?"),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: const Text("No"),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: const Text("Yes"),
+                  ),
+                ],
+              );
+            },
           );
+
+          if (overwrite == true) {
+            await _saveProducts(fields, databaseRef);
+          }
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("CSV file is empty or invalid!")),
-          );
+          await _saveProducts(fields, databaseRef);
         }
-      } catch (e) {
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error processing file: $e")),
+          const SnackBar(content: Text("CSV file is empty or invalid!")),
         );
       }
     } else {
@@ -118,6 +106,34 @@ class _MyStoreState extends State<MyStore> {
         const SnackBar(content: Text("No file selected.")),
       );
     }
+  }
+
+  Future<void> _saveProducts(
+      List<List<dynamic>> fields, DatabaseReference databaseRef) async {
+    await databaseRef.remove(); // Clear existing data if overwriting
+    final products = fields.skip(1).map((row) async {
+      final product = {
+        'name': row.length > 1 ? row[1]?.toString() ?? '' : '',
+        'salePrice': row.length > 2 ? row[2]?.toString() ?? '' : '',
+        'purchasePrice': row.length > 3 ? row[3]?.toString() ?? '' : '',
+        'description': row.length > 6 ? row[6]?.toString() ?? '' : '',
+        'productImage': row.length > 7 ? row[7]?.toString().trim() ?? '' : '',
+      };
+
+      final newProductRef = databaseRef.push();
+      await newProductRef.set(product);
+      product['key'] = newProductRef.key!;
+      return product;
+    }).toList();
+
+    final resolvedProducts = await Future.wait(products);
+    setState(() {
+      _products = resolvedProducts;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("File uploaded successfully!")),
+    );
   }
 
   @override
@@ -173,10 +189,7 @@ class _MyStoreState extends State<MyStore> {
         actions: [
           TextButton(
             onPressed: () => _signOut(context),
-            child: const Text(
-              'Logout',
-              style: TextStyle(color: Colors.white),
-            ),
+            child: const Text('Logout', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -191,14 +204,42 @@ class _MyStoreState extends State<MyStore> {
             ),
             const SizedBox(height: 16),
             Expanded(
-              child: _products.isEmpty
-                  ? const Center(child: Text('No products to display'))
-                  : ListView.builder(
-                      itemCount: _products.length,
+              child: StreamBuilder<DatabaseEvent>(
+                stream: FirebaseDatabase.instance.ref('products').onValue,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasData &&
+                      snapshot.data!.snapshot.value != null) {
+                    final List<Map<String, String>> products = [];
+                    Map<String, dynamic> data =
+                        (snapshot.data!.snapshot.value as Map<dynamic, dynamic>)
+                            .cast<String, dynamic>();
+                    data.forEach((key, value) {
+                      products.add({
+                        'key': key,
+                        'name': value['name'] ?? '',
+                        'salePrice': value['salePrice'] ?? '',
+                        'purchasePrice': value['purchasePrice'] ?? '',
+                        'description': value['description'] ?? '',
+                        'productImage': value['productImage'] ?? '',
+                      });
+                    });
+
+                    return ListView.builder(
+                      itemCount: products.length,
                       itemBuilder: (context, index) {
-                        return ProductCard(product: _products[index]);
+                        return ProductCard(
+                          product: products[index],
+                          onUpdate: _fetchProductsFromFirebase,
+                        );
                       },
-                    ),
+                    );
+                  } else {
+                    return const Center(child: Text('No products to display'));
+                  }
+                },
+              ),
             ),
           ],
         ),
