@@ -38,13 +38,22 @@ class _StoreRegistrationState extends State<StoreRegistration> {
     }
 
     try {
-      await FirebaseFirestore.instance.collection('stores').add({
+      // Generate a unique store ID based on a combination of fields or use Firebase's random ID
+      String uniqueStoreId =
+          FirebaseFirestore.instance.collection('stores').doc().id;
+
+      await FirebaseFirestore.instance
+          .collection('stores')
+          .doc(uniqueStoreId)
+          .set({
+        'storeId': uniqueStoreId,
         'aadharNumber': _aadharController.text,
         'gstNumber': _gstController.text,
         'email': _emailController.text,
         'password': _passwordController.text,
         'storeImage': 'Uploaded Image URL or Path',
       });
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Store registered successfully!')),
       );

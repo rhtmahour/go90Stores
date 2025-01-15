@@ -14,7 +14,7 @@ class AdminLogin extends StatefulWidget {
 
 class _AdminLoginState extends State<AdminLogin> {
   bool _passwordVisible = false;
-  bool _showAdminLogin = true; // Toggle between Admin and Store login
+  bool _showAdminLogin = true;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -24,7 +24,7 @@ class _AdminLoginState extends State<AdminLogin> {
   @override
   void initState() {
     super.initState();
-    _passwordVisible = false; // Password is initially hidden
+    _passwordVisible = false;
   }
 
   @override
@@ -41,7 +41,7 @@ class _AdminLoginState extends State<AdminLogin> {
 
     try {
       if (_showAdminLogin) {
-        // Admin Login using Firebase Authentication
+        // Admin Login
         UserCredential userCredential = await _auth.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
@@ -52,7 +52,7 @@ class _AdminLoginState extends State<AdminLogin> {
           MaterialPageRoute(builder: (context) => const AdminDashboard()),
         );
       } else {
-        // Store Login using Firestore
+        // Store Login
         final email = _emailController.text.trim();
         final password = _passwordController.text.trim();
 
@@ -63,13 +63,14 @@ class _AdminLoginState extends State<AdminLogin> {
             .get();
 
         if (querySnapshot.docs.isNotEmpty) {
-          // Valid store credentials
+          // Retrieve the storeId
+          final storeId = querySnapshot.docs.first.id;
+
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const MyStore()),
+            MaterialPageRoute(builder: (context) => MyStore(storeId: storeId)),
           );
         } else {
-          // Invalid credentials
           throw Exception('Invalid email or password for Store Login.');
         }
       }

@@ -5,8 +5,14 @@ import 'package:shimmer/shimmer.dart';
 class ProductCard extends StatelessWidget {
   final Map<String, String> product;
   final Function() onUpdate;
+  final String storeId;
 
-  const ProductCard({super.key, required this.product, required this.onUpdate});
+  const ProductCard({
+    super.key,
+    required this.product,
+    required this.onUpdate,
+    required this.storeId,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +32,6 @@ class ProductCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image display logic
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
             child: imageUrl.isNotEmpty
@@ -95,15 +100,15 @@ class ProductCard extends StatelessWidget {
                       _showEditDialog(
                           context, 'Sale Price', product['salePrice'],
                           (newValue) {
-                        _updateProductPrice(
-                            context, product['key']!, 'salePrice', newValue);
+                        _updateProductPrice(context, product['key']!,
+                            'salePrice', newValue, storeId);
                       });
                     } else if (value == 'Edit Purchase Price') {
                       _showEditDialog(
                           context, 'Purchase Price', product['purchasePrice'],
                           (newValue) {
                         _updateProductPrice(context, product['key']!,
-                            'purchasePrice', newValue);
+                            'purchasePrice', newValue, storeId);
                       });
                     }
                   },
@@ -159,16 +164,16 @@ class ProductCard extends StatelessWidget {
     );
   }
 
-  void _updateProductPrice(
-      BuildContext context, String key, String field, String newValue) async {
-    final databaseRef = FirebaseDatabase.instance.ref('products');
+  void _updateProductPrice(BuildContext context, String key, String field,
+      String newValue, String storeId) async {
+    final databaseRef = FirebaseDatabase.instance.ref('products/$storeId/$key');
 
     try {
-      await databaseRef.child(key).update({field: newValue});
+      await databaseRef.update({field: newValue});
+      onUpdate(); // Refresh the UI
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Product price updated successfully!')),
       );
-      onUpdate(); // Call the callback after updating the price
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error updating product: $e')),

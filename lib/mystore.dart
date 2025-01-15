@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:csv/csv.dart';
+import 'package:go90stores/adminlogin.dart';
 import 'package:go90stores/productcard.dart';
 import 'dart:io';
 import 'dart:convert';
-import 'adminlogin.dart';
 
 class MyStore extends StatefulWidget {
-  const MyStore({super.key});
+  final String storeId;
+  const MyStore({Key? key, required this.storeId}) : super(key: key);
 
   @override
   State<MyStore> createState() => _MyStoreState();
@@ -17,6 +18,7 @@ class MyStore extends StatefulWidget {
 
 class _MyStoreState extends State<MyStore> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  bool _isLoading = false; // To track loading state
   List<Map<String, String>> _products = [];
 
   Future<void> _signOut(BuildContext context) async {
@@ -51,66 +53,81 @@ class _MyStoreState extends State<MyStore> {
   }
 
   Future<void> _uploadCsvFile() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['csv'],
-    );
+    setState(() {
+      _isLoading = true;
+    });
 
-    if (result != null && result.files.single.path != null) {
-      final path = result.files.single.path!;
-      final input = File(path).openRead();
-      final fields = await input
-          .transform(utf8.decoder)
-          .transform(CsvToListConverter(eol: '\n'))
-          .toList();
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['csv'],
+      );
 
-      if (fields.isNotEmpty) {
-        final databaseRef = FirebaseDatabase.instance.ref('products');
-        final existingProducts = await databaseRef.get();
+      if (result != null && result.files.single.path != null) {
+        final path = result.files.single.path!;
+        final input = File(path).openRead();
+        final fields = await input
+            .transform(utf8.decoder)
+            .transform(CsvToListConverter(eol: '\n'))
+            .toList();
 
-        if (existingProducts.exists) {
-          final bool? overwrite = await showDialog<bool>(
-            context: context,
-            builder: (context) {
-              return AlertDialog(
-                title: const Text("Overwrite Products"),
-                content: const Text(
-                    "Products already exist. Do you want to overwrite them?"),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    child: const Text("No"),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(true),
-                    child: const Text("Yes"),
-                  ),
-                ],
-              );
-            },
-          );
+        if (fields.isNotEmpty) {
+          final storeRef =
+              FirebaseDatabase.instance.ref('products/${widget.storeId}');
+          final existingProducts = await storeRef.get();
 
-          if (overwrite == true) {
-            await _saveProducts(fields, databaseRef);
+          if (existingProducts.exists) {
+            final bool? overwrite = await showDialog<bool>(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: const Text("Overwrite Products"),
+                  content: const Text(
+                      "Products already exist. Do you want to overwrite them?"),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: const Text("No"),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: const Text("Yes"),
+                    ),
+                  ],
+                );
+              },
+            );
+
+            if (overwrite == true) {
+              await _saveProducts(fields, storeRef);
+            }
+          } else {
+            await _saveProducts(fields, storeRef);
           }
         } else {
-          await _saveProducts(fields, databaseRef);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("CSV file is empty or invalid!")),
+          );
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("CSV file is empty or invalid!")),
+          const SnackBar(content: Text("No file selected.")),
         );
       }
-    } else {
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("No file selected.")),
+        SnackBar(content: Text("Error: ${e.toString()}")),
       );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
   Future<void> _saveProducts(
-      List<List<dynamic>> fields, DatabaseReference databaseRef) async {
-    await databaseRef.remove(); // Clear existing data if overwriting
+      List<List<dynamic>> fields, DatabaseReference storeRef) async {
+    await storeRef.remove(); // Clear existing data if overwriting
     final products = fields.skip(1).map((row) async {
       final product = {
         'name': row.length > 1 ? row[1]?.toString() ?? '' : '',
@@ -120,7 +137,7 @@ class _MyStoreState extends State<MyStore> {
         'productImage': row.length > 7 ? row[7]?.toString().trim() ?? '' : '',
       };
 
-      final newProductRef = databaseRef.push();
+      final newProductRef = storeRef.push();
       await newProductRef.set(product);
       product['key'] = newProductRef.key!;
       return product;
@@ -143,8 +160,9 @@ class _MyStoreState extends State<MyStore> {
   }
 
   Future<void> _fetchProductsFromFirebase() async {
-    final databaseRef = FirebaseDatabase.instance.ref('products');
-    final snapshot = await databaseRef.get();
+    final storeRef =
+        FirebaseDatabase.instance.ref('products/${widget.storeId}');
+    final snapshot = await storeRef.get();
 
     if (snapshot.exists && snapshot.value != null) {
       final List<Map<String, String>> products = [];
@@ -199,13 +217,15 @@ class _MyStoreState extends State<MyStore> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             ElevatedButton(
-              onPressed: _uploadCsvFile,
+              onPressed: _isLoading ? null : _uploadCsvFile,
               child: const Text('Upload CSV File'),
             ),
             const SizedBox(height: 16),
             Expanded(
               child: StreamBuilder<DatabaseEvent>(
-                stream: FirebaseDatabase.instance.ref('products').onValue,
+                stream: FirebaseDatabase.instance
+                    .ref('products/${widget.storeId}')
+                    .onValue,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
@@ -232,6 +252,7 @@ class _MyStoreState extends State<MyStore> {
                         return ProductCard(
                           product: products[index],
                           onUpdate: _fetchProductsFromFirebase,
+                          storeId: '',
                         );
                       },
                     );
