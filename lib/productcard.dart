@@ -3,25 +3,28 @@ import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
 class ProductCard extends StatelessWidget {
-  final Map<String, String> product;
+  final Map<String, dynamic> product;
   final Function() onUpdate;
   final String storeId;
 
   const ProductCard({
-    super.key,
+    Key? key,
     required this.product,
     required this.onUpdate,
     required this.storeId,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     String imageUrl = product['productImage']?.trim() ?? '';
     String shortDescription = product['description'] != null
-        ? product['description']!.length > 50
-            ? '${product['description']!.substring(0, 50)}...'
-            : product['description']!
+        ? product['description'].length > 50
+            ? '${product['description'].substring(0, 50)}...'
+            : product['description']
         : 'No Description';
+
+    String salePrice = product['salePrice']?.toString() ?? 'N/A';
+    String purchasePrice = product['purchasePrice']?.toString() ?? 'N/A';
 
     return Card(
       elevation: 4,
@@ -87,8 +90,8 @@ class ProductCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        "Purchase Price: \RS.${product['purchasePrice'] ?? 'N/A'}\n"
-                        "Sale Price: \RS.${product['salePrice'] ?? 'N/A'}\n"
+                        "Purchase Price: ₹$purchasePrice\n"
+                        "Sale Price: ₹$salePrice\n"
                         "Description: $shortDescription",
                       ),
                     ],
@@ -96,26 +99,24 @@ class ProductCard extends StatelessWidget {
                 ),
                 PopupMenuButton<String>(
                   onSelected: (value) {
-                    if (value == 'Edit Sales Price') {
-                      _showEditDialog(
-                          context, 'Sale Price', product['salePrice'],
+                    if (value == 'Edit Sale Price') {
+                      _showEditDialog(context, 'Sale Price', salePrice,
                           (newValue) {
-                        _updateProductPrice(context, product['key']!,
-                            'salePrice', newValue, storeId);
+                        _updateProductPrice(
+                            context, product['key'], 'salePrice', newValue);
                       });
                     } else if (value == 'Edit Purchase Price') {
-                      _showEditDialog(
-                          context, 'Purchase Price', product['purchasePrice'],
+                      _showEditDialog(context, 'Purchase Price', purchasePrice,
                           (newValue) {
-                        _updateProductPrice(context, product['key']!,
-                            'purchasePrice', newValue, storeId);
+                        _updateProductPrice(
+                            context, product['key'], 'purchasePrice', newValue);
                       });
                     }
                   },
                   itemBuilder: (context) => [
                     const PopupMenuItem(
-                      value: 'Edit Sales Price',
-                      child: Text('Edit Sales Price'),
+                      value: 'Edit Sale Price',
+                      child: Text('Edit Sale Price'),
                     ),
                     const PopupMenuItem(
                       value: 'Edit Purchase Price',
@@ -132,7 +133,7 @@ class ProductCard extends StatelessWidget {
   }
 
   void _showEditDialog(BuildContext context, String priceType,
-      String? currentValue, Function(String) onSubmit) {
+      String currentValue, Function(String) onSubmit) {
     final TextEditingController controller =
         TextEditingController(text: currentValue);
 
@@ -164,12 +165,14 @@ class ProductCard extends StatelessWidget {
     );
   }
 
-  void _updateProductPrice(BuildContext context, String key, String field,
-      String newValue, String storeId) async {
-    final databaseRef = FirebaseDatabase.instance.ref('products/$storeId/$key');
+  void _updateProductPrice(
+      BuildContext context, String key, String field, String newValue) async {
+    final databaseRef = FirebaseDatabase.instance
+        .ref('products/$storeId/$key'); // Ensure correct path
 
     try {
-      await databaseRef.update({field: newValue});
+      // Convert the new value to double before updating
+      await databaseRef.update({field: double.parse(newValue)});
       onUpdate(); // Refresh the UI
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Product price updated successfully!')),

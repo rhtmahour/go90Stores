@@ -10,6 +10,7 @@ import 'dart:convert';
 
 class MyStore extends StatefulWidget {
   final String storeId;
+
   const MyStore({Key? key, required this.storeId}) : super(key: key);
 
   @override
@@ -17,10 +18,6 @@ class MyStore extends StatefulWidget {
 }
 
 class _MyStoreState extends State<MyStore> {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  bool _isLoading = false; // To track loading state
-  List<Map<String, String>> _products = [];
-
   Future<void> _signOut(BuildContext context) async {
     final bool? confirmLogout = await showDialog<bool>(
       context: context,
@@ -51,6 +48,10 @@ class _MyStoreState extends State<MyStore> {
       );
     }
   }
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  bool _isLoading = false;
+  List<Map<String, String>> _products = [];
 
   Future<void> _uploadCsvFile() async {
     setState(() {
@@ -127,7 +128,7 @@ class _MyStoreState extends State<MyStore> {
 
   Future<void> _saveProducts(
       List<List<dynamic>> fields, DatabaseReference storeRef) async {
-    await storeRef.remove(); // Clear existing data if overwriting
+    await storeRef.remove();
     final products = fields.skip(1).map((row) async {
       final product = {
         'name': row.length > 1 ? row[1]?.toString() ?? '' : '',
@@ -153,12 +154,6 @@ class _MyStoreState extends State<MyStore> {
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _fetchProductsFromFirebase();
-  }
-
   Future<void> _fetchProductsFromFirebase() async {
     final storeRef =
         FirebaseDatabase.instance.ref('products/${widget.storeId}');
@@ -170,11 +165,13 @@ class _MyStoreState extends State<MyStore> {
       data.forEach((key, value) {
         products.add({
           'key': key,
-          'name': value['name'] ?? '',
-          'salePrice': value['salePrice'] ?? '',
-          'purchasePrice': value['purchasePrice'] ?? '',
-          'description': value['description'] ?? '',
-          'productImage': value['productImage'] ?? '',
+          'name': value['name']?.toString() ?? '',
+          'salePrice':
+              value['salePrice']?.toString() ?? '', // Ensuring conversion
+          'purchasePrice':
+              value['purchasePrice']?.toString() ?? '', // Ensuring conversion
+          'description': value['description']?.toString() ?? '',
+          'productImage': value['productImage']?.toString() ?? '',
         });
       });
 
@@ -186,6 +183,12 @@ class _MyStoreState extends State<MyStore> {
         _products = [];
       });
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProductsFromFirebase();
   }
 
   @override
@@ -238,11 +241,15 @@ class _MyStoreState extends State<MyStore> {
                     data.forEach((key, value) {
                       products.add({
                         'key': key,
-                        'name': value['name'] ?? '',
-                        'salePrice': value['salePrice'] ?? '',
-                        'purchasePrice': value['purchasePrice'] ?? '',
-                        'description': value['description'] ?? '',
-                        'productImage': value['productImage'] ?? '',
+                        'name': value['name']?.toString() ?? '',
+                        'salePrice': value['salePrice'] != null
+                            ? value['salePrice'].toString()
+                            : '', // Convert salePrice to string
+                        'purchasePrice': value['purchasePrice'] != null
+                            ? value['purchasePrice'].toString()
+                            : '', // Convert purchasePrice to string
+                        'description': value['description']?.toString() ?? '',
+                        'productImage': value['productImage']?.toString() ?? '',
                       });
                     });
 
@@ -252,7 +259,7 @@ class _MyStoreState extends State<MyStore> {
                         return ProductCard(
                           product: products[index],
                           onUpdate: _fetchProductsFromFirebase,
-                          storeId: '',
+                          storeId: widget.storeId,
                         );
                       },
                     );
