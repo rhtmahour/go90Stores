@@ -19,6 +19,7 @@ class _StoreRegistrationState extends State<StoreRegistration> {
   final TextEditingController _gstController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
 
   void _setImage(File pickedImage) {
     setState(() {
@@ -49,6 +50,7 @@ class _StoreRegistrationState extends State<StoreRegistration> {
         'storeId': uniqueStoreId,
         'aadharNumber': _aadharController.text,
         'gstNumber': _gstController.text,
+        'phone': _phoneController.text,
         'email': _emailController.text,
         'password': _passwordController.text,
         'storeImage': 'Uploaded Image URL or Path',
@@ -121,6 +123,24 @@ class _StoreRegistrationState extends State<StoreRegistration> {
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter GST number';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: _phoneController,
+                    decoration: const InputDecoration(
+                      labelText: 'Phone Number',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a phone number';
+                      }
+                      // Check if the phone number contains only digits and is of a valid length
+                      if (!RegExp(r'^\d{10,15}$').hasMatch(value)) {
+                        return 'Please enter a valid phone number';
                       }
                       return null;
                     },

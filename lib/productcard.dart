@@ -25,6 +25,7 @@ class ProductCard extends StatelessWidget {
 
     String salePrice = product['salePrice']?.toString() ?? 'N/A';
     String purchasePrice = product['purchasePrice']?.toString() ?? 'N/A';
+    String QuotePrice = product['purchasePrice']?.toString() ?? 'N/A';
 
     return Card(
       elevation: 4,
@@ -111,6 +112,12 @@ class ProductCard extends StatelessWidget {
                         _updateProductPrice(
                             context, product['key'], 'purchasePrice', newValue);
                       });
+                    } else if (value == 'Edit Purchase Price') {
+                      _showEditDialog(context, 'Purchase Price', purchasePrice,
+                          (newValue) {
+                        _updateProductPrice(
+                            context, product['key'], 'purchasePrice', newValue);
+                      });
                     }
                   },
                   itemBuilder: (context) => [
@@ -121,6 +128,10 @@ class ProductCard extends StatelessWidget {
                     const PopupMenuItem(
                       value: 'Edit Purchase Price',
                       child: Text('Edit Purchase Price'),
+                    ),
+                    const PopupMenuItem(
+                      value: 'Enter Quote Price',
+                      child: Text('Quote Price'),
                     ),
                   ],
                 ),
