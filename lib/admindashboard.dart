@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go90stores/adminlogin.dart';
+import 'package:go90stores/lowestpurchasepricereport.dart';
 
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
@@ -97,9 +98,11 @@ class AdminDashboard extends StatelessWidget {
                       ? MainAxisAlignment.spaceEvenly
                       : MainAxisAlignment.center,
                   children: <Widget>[
-                    _buildSummaryCard("Total Stores", Icons.store, Colors.blue),
+                    _buildSummaryCard(
+                        "Total Stores", Icons.store, Colors.green),
                     _buildSummaryCard("Pending", Icons.pending, Colors.orange),
                     _buildSummaryCard("Rejected", Icons.close, Colors.red),
+                    _buildSummaryCard("Approved", Icons.verified, Colors.blue),
                   ],
                 );
               },
@@ -269,30 +272,78 @@ class AdminDashboard extends StatelessWidget {
                         flex: 1,
                         child: Padding(
                           padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildActivityCard(
-                                title: "Total Sales",
-                                value: "\$.12,345",
-                                icon: Icons.attach_money,
-                                color: Colors.green,
-                              ),
-                              const SizedBox(height: 16),
-                              _buildActivityCard(
-                                title: "Total Products",
-                                value: "235",
-                                icon: Icons.inventory,
-                                color: Colors.blue,
-                              ),
-                              const SizedBox(height: 16),
-                              _buildActivityCard(
-                                title: "Total Revenue",
-                                value: "\$50,000",
-                                icon: Icons.bar_chart,
-                                color: Colors.purple,
-                              ),
-                            ],
+                          child: SingleChildScrollView(
+                            // Added to make the content scrollable
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.blue,
+                                        Colors.purple,
+                                      ], // Gradient colors
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: TextButton(
+                                    onPressed: () {
+                                      // Navigate to Lowest Purchase Price Report using MaterialPageRoute
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              Lowestpurchasepricereport(), // Target Page
+                                        ),
+                                      );
+                                    },
+                                    style: TextButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 20,
+                                        horizontal: 24,
+                                      ),
+                                      backgroundColor: Colors
+                                          .transparent, // Transparent to show gradient
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'Lowest Purchase Price Report',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                _buildActivityCard(
+                                  title: "Total Sales",
+                                  value: "\$.12,345",
+                                  icon: Icons.attach_money,
+                                  color: Colors.green,
+                                ),
+                                const SizedBox(height: 16),
+                                _buildActivityCard(
+                                  title: "Total Products",
+                                  value: "235",
+                                  icon: Icons.inventory,
+                                  color: Colors.blue,
+                                ),
+                                const SizedBox(height: 16),
+                                _buildActivityCard(
+                                  title: "Total Revenue",
+                                  value: "\$50,000",
+                                  icon: Icons.bar_chart,
+                                  color: Colors.purple,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),

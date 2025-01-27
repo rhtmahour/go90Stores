@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "369820519327",
+    "firebase_url": "https://go90store-default-rtdb.firebaseio.com",
     "project_id": "go90store",
     "storage_bucket": "go90store.firebasestorage.app"
   },
@@ -9,7 +10,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:369820519327:android:5b1d7cff03cabbdcab0baa",
         "android_client_info": {
-          "package_name": "com.example.go90stores"
+          "package_name": "com.exa"
         }
       },
       "oauth_client": [],

@@ -46,6 +46,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '369820519327',
     projectId: 'go90store',
     authDomain: 'go90store.firebaseapp.com',
+    databaseURL: 'https://go90store-default-rtdb.firebaseio.com',
     storageBucket: 'go90store.firebasestorage.app',
     measurementId: 'G-M6KTQ32W55',
   );
@@ -55,6 +56,7 @@ class DefaultFirebaseOptions {
     appId: '1:369820519327:android:5b1d7cff03cabbdcab0baa',
     messagingSenderId: '369820519327',
     projectId: 'go90store',
+    databaseURL: 'https://go90store-default-rtdb.firebaseio.com',
     storageBucket: 'go90store.firebasestorage.app',
   );
 
@@ -63,6 +65,7 @@ class DefaultFirebaseOptions {
     appId: '1:369820519327:ios:1b81fd521f35f495ab0baa',
     messagingSenderId: '369820519327',
     projectId: 'go90store',
+    databaseURL: 'https://go90store-default-rtdb.firebaseio.com',
     storageBucket: 'go90store.firebasestorage.app',
     iosBundleId: 'com.example.go90stores',
   );
@@ -72,6 +75,7 @@ class DefaultFirebaseOptions {
     appId: '1:369820519327:ios:1b81fd521f35f495ab0baa',
     messagingSenderId: '369820519327',
     projectId: 'go90store',
+    databaseURL: 'https://go90store-default-rtdb.firebaseio.com',
     storageBucket: 'go90store.firebasestorage.app',
     iosBundleId: 'com.example.go90stores',
   );
@@ -82,7 +86,9 @@ class DefaultFirebaseOptions {
     messagingSenderId: '369820519327',
     projectId: 'go90store',
     authDomain: 'go90store.firebaseapp.com',
+    databaseURL: 'https://go90store-default-rtdb.firebaseio.com',
     storageBucket: 'go90store.firebasestorage.app',
     measurementId: 'G-MZ82D6R5MV',
   );
+
 }
