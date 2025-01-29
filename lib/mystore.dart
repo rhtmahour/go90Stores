@@ -131,6 +131,7 @@ class _MyStoreState extends State<MyStore> {
     await storeRef.remove();
     final products = fields.skip(1).map((row) async {
       final product = {
+        'id': row.length > 0 ? row[0]?.toString() ?? '' : '',
         'name': row.length > 1 ? row[1]?.toString() ?? '' : '',
         'salePrice': row.length > 2 ? row[2]?.toString() ?? '' : '',
         'purchasePrice': row.length > 3 ? row[3]?.toString() ?? '' : '',

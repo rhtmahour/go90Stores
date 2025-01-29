@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go90stores/adminlogin.dart';
 import 'package:go90stores/lowestpurchasepricereport.dart';
+import 'package:go90stores/storedetailpage.dart';
 
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
@@ -167,6 +168,14 @@ class AdminDashboard extends StatelessWidget {
                                   child: ListTile(
                                     onTap: () {
                                       // Navigate to store details page
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              StoreDetailsPage(
+                                                  storeId: store.id),
+                                        ),
+                                      );
                                     },
                                     contentPadding: const EdgeInsets.all(15),
                                     leading: CircleAvatar(
@@ -296,7 +305,7 @@ class AdminDashboard extends StatelessWidget {
                                         context,
                                         MaterialPageRoute(
                                           builder: (context) =>
-                                              Lowestpurchasepricereport(), // Target Page
+                                              LowestPurchasePriceReport(), // Target Page
                                         ),
                                       );
                                     },

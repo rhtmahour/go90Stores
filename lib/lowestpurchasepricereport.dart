@@ -4,21 +4,23 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-class Lowestpurchasepricereport extends StatefulWidget {
-  const Lowestpurchasepricereport({super.key});
+class LowestPurchasePriceReport extends StatefulWidget {
+  const LowestPurchasePriceReport({super.key});
 
   @override
-  State<Lowestpurchasepricereport> createState() =>
-      _LowestpurchasepricereportState();
+  State<LowestPurchasePriceReport> createState() =>
+      _LowestPurchasePriceReportState();
 }
 
-class _LowestpurchasepricereportState extends State<Lowestpurchasepricereport> {
+class _LowestPurchasePriceReportState extends State<LowestPurchasePriceReport> {
   final DatabaseReference databaseRef = FirebaseDatabase.instance
       .refFromURL("https://go90store-default-rtdb.firebaseio.com/products");
 
   bool _isLoading = false;
   String _statusMessage = '';
   List<Map<String, dynamic>> reportData = [];
+
+  /// **Function to Calculate the Lowest Purchase Price Across Stores**
   Future<void> calculateLowestPurchasePrice() async {
     setState(() {
       _isLoading = true;
@@ -26,40 +28,37 @@ class _LowestpurchasepricereportState extends State<Lowestpurchasepricereport> {
     });
 
     try {
-      // Fetch all products from Firebase
       final snapshot = await databaseRef.get();
 
       if (snapshot.exists) {
         final data = snapshot.value;
 
-        // Validate that the root data is a Map
         if (data is Map<dynamic, dynamic>) {
           final Map<String, Map<String, dynamic>> lowestPrices = {};
 
-          // Iterate through each storeId and its products
+          // Iterate through each store in the database
           data.forEach((storeId, storeProducts) {
             if (storeProducts is Map<dynamic, dynamic>) {
-              storeProducts.forEach((productId, product) {
-                if (product is Map<dynamic, dynamic>) {
-                  final productName = product["name"];
-                  final purchasePrice = product["purchasePrice"];
+              // Iterate through products in the store
+              storeProducts.forEach((productId, productDetails) {
+                if (productDetails is Map<dynamic, dynamic>) {
+                  final String? productName = productDetails["name"];
 
-                  // Ensure productName and purchasePrice are valid
-                  if (productName != null && purchasePrice is num) {
-                    // Compare and find the lowest price for each product
-                    if (lowestPrices.containsKey(productName)) {
-                      if (purchasePrice <
-                          lowestPrices[productName]!["lowestPrice"]) {
-                        lowestPrices[productName] = {
-                          "lowestPrice": purchasePrice,
-                          "storeName": storeId,
-                        };
-                      }
-                    } else {
-                      print("This is else part of the code ");
+                  // Convert purchasePrice to double safely
+                  final dynamic rawPurchasePrice =
+                      productDetails["purchasePrice"];
+                  final double? purchasePrice = rawPurchasePrice is num
+                      ? rawPurchasePrice.toDouble()
+                      : double.tryParse(rawPurchasePrice.toString());
+
+                  if (productName != null && purchasePrice != null) {
+                    if (!lowestPrices.containsKey(productName) ||
+                        purchasePrice <
+                            lowestPrices[productName]!["lowestPrice"]) {
                       lowestPrices[productName] = {
                         "lowestPrice": purchasePrice,
                         "storeName": storeId,
+                        "productId": productId,
                       };
                     }
                   }
@@ -68,30 +67,29 @@ class _LowestpurchasepricereportState extends State<Lowestpurchasepricereport> {
             }
           });
 
-          // Prepare the report data
-          reportData = lowestPrices.entries
-              .map((entry) => {
-                    "productname": entry.key,
-                    "lowestpurchaseprice": entry.value["lowestPrice"],
-                    "storename": entry.value["storeName"],
-                  })
-              .toList();
+          // Convert map to list for UI display
+          reportData = lowestPrices.entries.map((entry) {
+            return {
+              "productName": entry.key,
+              "lowestPurchasePrice": entry.value["lowestPrice"],
+              "storeName": entry.value["storeName"],
+              "productId": entry.value["productId"],
+            };
+          }).toList();
 
           setState(() {
             _statusMessage = reportData.isEmpty
-                ? 'No products with a valid purchase price were found.'
+                ? 'No products found with a valid purchase price.'
                 : 'Report generated successfully!';
           });
         } else {
-          _statusMessage = 'Unexpected data format: Root data is not a Map.';
-          print("Root data is not a Map: $data");
+          _statusMessage = 'Unexpected data format!';
         }
       } else {
         _statusMessage = 'No data found in the database.';
       }
     } catch (error) {
       _statusMessage = 'Error fetching data: $error';
-      print("Error fetching data: $error");
     } finally {
       setState(() {
         _isLoading = false;
@@ -99,6 +97,7 @@ class _LowestpurchasepricereportState extends State<Lowestpurchasepricereport> {
     }
   }
 
+  /// **Function to Generate and Download CSV Report**
   Future<void> generateAndDownloadReport() async {
     if (reportData.isEmpty) {
       setState(() {
@@ -113,10 +112,11 @@ class _LowestpurchasepricereportState extends State<Lowestpurchasepricereport> {
     });
 
     final StringBuffer csvBuffer = StringBuffer();
-    csvBuffer.writeln("storename,productname,lowestpurchaseprice");
+    csvBuffer.writeln("Store Name,Product Name,Lowest Purchase Price");
+
     for (var entry in reportData) {
       csvBuffer.writeln(
-          "${entry['storename']},${entry['productname']},${entry['lowestpurchaseprice']}");
+          "${entry['storeName']},${entry['productName']},${entry['lowestPurchasePrice']}");
     }
 
     final directory = await getApplicationDocumentsDirectory();
@@ -145,7 +145,7 @@ class _LowestpurchasepricereportState extends State<Lowestpurchasepricereport> {
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: <Color>[Colors.blue, Colors.purple],
+              colors: [Colors.blue, Colors.purple],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -185,7 +185,7 @@ class _LowestpurchasepricereportState extends State<Lowestpurchasepricereport> {
                       ),
                     ),
                   ),
-                  Divider(
+                  const Divider(
                     color: Colors.purpleAccent,
                     thickness: 2,
                     endIndent: 50,
@@ -193,34 +193,36 @@ class _LowestpurchasepricereportState extends State<Lowestpurchasepricereport> {
                   if (reportData.isNotEmpty)
                     Expanded(
                       child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Column(
-                          children: reportData.map<Widget>((item) {
-                            return Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 8.0),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    "StoreId: ${item['storename']}",
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                  SizedBox(width: 100),
-                                  Text(
-                                    "${item['productname']}",
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                  SizedBox(width: 100),
-                                  Text(
-                                    "\Rs.${item['lowestpurchaseprice']}",
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                ],
+                        scrollDirection: Axis.vertical,
+                        child: DataTable(
+                          columns: const [
+                            DataColumn(
+                              label: Text(
+                                'Store Name',
+                                style: TextStyle(fontWeight: FontWeight.bold),
                               ),
+                            ),
+                            DataColumn(
+                              label: Text(
+                                'Product Name',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            DataColumn(
+                              label: Text(
+                                'LowestPP',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                          rows: reportData.map((item) {
+                            return DataRow(
+                              cells: [
+                                DataCell(Text(item['storeName'] ?? 'N/A')),
+                                DataCell(Text(item['productName'] ?? 'N/A')),
+                                DataCell(Text(
+                                    '₹${item['lowestPurchasePrice'] ?? 'N/A'}')),
+                              ],
                             );
                           }).toList(),
                         ),
