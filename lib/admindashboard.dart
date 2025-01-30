@@ -168,27 +168,28 @@ class AdminDashboard extends StatelessWidget {
                                   child: ListTile(
                                     onTap: () {
                                       // Navigate to store details page
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              StoreDetailsPage(
-                                                  storeId: store.id),
-                                        ),
-                                      );
+                                      showStoreDetailsDialog(context, store.id);
                                     },
                                     contentPadding: const EdgeInsets.all(15),
                                     leading: CircleAvatar(
-                                      radius: 30,
-                                      backgroundImage: imageUrl != null
-                                          ? NetworkImage(imageUrl)
-                                          : const AssetImage(
-                                                  'assets/placeholder.png')
-                                              as ImageProvider,
-                                      child: imageUrl == null
-                                          ? const Icon(Icons.store,
-                                              size: 30, color: Colors.white)
-                                          : null,
+                                      radius: 35,
+                                      backgroundColor: Colors.grey[
+                                          300], // Light grey background for better UI
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(
+                                            35), // Ensures perfect circular clipping
+                                        child: imageUrl.isNotEmpty
+                                            ? Image.network(
+                                                imageUrl,
+                                                width: 70,
+                                                height: 70,
+                                                fit: BoxFit.cover,
+                                                errorBuilder: (context, error,
+                                                        stackTrace) =>
+                                                    _buildPlaceholder(),
+                                              )
+                                            : _buildPlaceholder(),
+                                      ),
                                     ),
                                     title: Row(
                                       children: [
@@ -434,5 +435,18 @@ Widget _buildSummaryCard(String title, IconData icon, Color color) {
         ],
       ),
     ),
+  );
+}
+
+// Helper function for placeholder
+Widget _buildPlaceholder() {
+  return Container(
+    width: 70,
+    height: 70,
+    decoration: BoxDecoration(
+      color: Colors.white, // Slightly darker grey for contrast
+      borderRadius: BorderRadius.circular(35),
+    ),
+    child: const Icon(Icons.store, size: 40, color: Colors.green),
   );
 }
