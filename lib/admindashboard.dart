@@ -154,7 +154,7 @@ class AdminDashboard extends StatelessWidget {
                               final data = store.data() as Map<String, dynamic>;
 
                               final imageUrl = data['storeImage'];
-                              final email = data['email'] ?? 'N/A';
+                              final storename = data['storename'] ?? 'N/A';
                               final gstNumber = data['gstNumber'] ?? 'N/A';
 
                               return Padding(
@@ -194,10 +194,10 @@ class AdminDashboard extends StatelessWidget {
                                     title: Row(
                                       children: [
                                         Text(
-                                          email,
+                                          storename,
                                           style: const TextStyle(
                                             fontWeight: FontWeight.bold,
-                                            fontSize: 16,
+                                            fontSize: 30,
                                           ),
                                         ),
                                         const SizedBox(width: 8),

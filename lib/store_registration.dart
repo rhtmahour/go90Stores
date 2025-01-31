@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart'; // Import Firebase Storage
 import 'package:go90stores/adminlogin.dart';
 import 'store_image_picker.dart'; // Import the StoreImagePicker file
 
@@ -14,7 +15,9 @@ class StoreRegistration extends StatefulWidget {
 class _StoreRegistrationState extends State<StoreRegistration> {
   final _formKey = GlobalKey<FormState>();
   File? _storeImage;
+  bool _isUploading = false; // Track upload progress
 
+  final TextEditingController _storenameController = TextEditingController();
   final TextEditingController _aadharController = TextEditingController();
   final TextEditingController _gstController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -39,7 +42,14 @@ class _StoreRegistrationState extends State<StoreRegistration> {
     }
 
     try {
-      // Generate a unique store ID based on a combination of fields or use Firebase's random ID
+      setState(() {
+        _isUploading = true; // Start showing loading indicator
+      });
+
+      // Upload the image to Firebase Storage
+      String imageUrl = await _uploadImageToStorage();
+
+      // Generate a unique store ID based on Firebase random ID
       String uniqueStoreId =
           FirebaseFirestore.instance.collection('stores').doc().id;
 
@@ -48,18 +58,20 @@ class _StoreRegistrationState extends State<StoreRegistration> {
           .doc(uniqueStoreId)
           .set({
         'storeId': uniqueStoreId,
+        'storename': _storenameController.text,
         'aadharNumber': _aadharController.text,
         'gstNumber': _gstController.text,
         'phone': _phoneController.text,
         'email': _emailController.text,
         'password': _passwordController.text,
-        'storeImage': 'Uploaded Image URL or Path',
+        'storeImage': imageUrl, // Store the uploaded image URL
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Store registered successfully!')),
       );
       _formKey.currentState!.reset();
+
       // Navigate to the AdminLogin screen
       Navigator.pushReplacement(
         context,
@@ -67,8 +79,32 @@ class _StoreRegistrationState extends State<StoreRegistration> {
       );
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $error')),
+        SnackBar(content: Text('Error during store registration: $error')),
       );
+    } finally {
+      setState(() {
+        _isUploading = false; // Stop loading indicator
+      });
+    }
+  }
+
+  Future<String> _uploadImageToStorage() async {
+    // Ensure that the image is not null
+    if (_storeImage == null) throw 'No image selected';
+
+    // Create a unique file name for the image
+    String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+
+    try {
+      // Upload the image to Firebase Storage
+      Reference storageRef =
+          FirebaseStorage.instance.ref().child('store_images/$fileName');
+      UploadTask uploadTask = storageRef.putFile(_storeImage!);
+      TaskSnapshot snapshot = await uploadTask.whenComplete(() {});
+      String imageUrl = await snapshot.ref.getDownloadURL();
+      return imageUrl; // Return the image URL
+    } catch (error) {
+      throw 'Failed to upload image: $error'; // Throw error if image upload fails
     }
   }
 
@@ -95,6 +131,21 @@ class _StoreRegistrationState extends State<StoreRegistration> {
                   ),
                   const SizedBox(height: 10),
                   StoreImagePicker(onImagePicked: _setImage),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    controller: _storenameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Store Name',
+                      hintText: 'Enter your store name',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a store name';
+                      }
+                      return null;
+                    },
+                  ),
                   const SizedBox(height: 20),
                   TextFormField(
                     controller: _aadharController,
@@ -138,7 +189,6 @@ class _StoreRegistrationState extends State<StoreRegistration> {
                       if (value == null || value.isEmpty) {
                         return 'Please enter a phone number';
                       }
-                      // Check if the phone number contains only digits and is of a valid length
                       if (!RegExp(r'^\d{10,15}$').hasMatch(value)) {
                         return 'Please enter a valid phone number';
                       }
@@ -182,19 +232,21 @@ class _StoreRegistrationState extends State<StoreRegistration> {
                     },
                   ),
                   const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _registerStore,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 30,
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: const Text('Register Store'),
-                  ),
+                  _isUploading // Display a loading indicator when uploading
+                      ? const CircularProgressIndicator()
+                      : ElevatedButton(
+                          onPressed: _registerStore,
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 30,
+                              vertical: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: const Text('Register Store'),
+                        ),
                 ],
               ),
             ),

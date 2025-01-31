@@ -32,7 +32,7 @@ void showStoreDetailsDialog(BuildContext context, String storeId) async {
           }
 
           final storeData = snapshot.data!.data() as Map<String, dynamic>;
-          final String name = storeData['name'] ?? 'N/A';
+          final String storename = storeData['storename'] ?? 'N/A';
           final String email = storeData['email'] ?? 'N/A';
           final String phone = storeData['phone'] ?? 'N/A';
           final String address = storeData['address'] ?? 'N/A';
@@ -64,10 +64,10 @@ void showStoreDetailsDialog(BuildContext context, String storeId) async {
                     ),
                     child: Center(
                       child: Text(
-                        name,
+                        storename,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
-                          fontSize: 20,
+                          fontSize: 30,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
@@ -88,9 +88,9 @@ void showStoreDetailsDialog(BuildContext context, String storeId) async {
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) =>
                                   const Icon(
-                                Icons.broken_image,
-                                size: 80,
-                                color: Colors.grey,
+                                Icons.store,
+                                size: 100,
+                                color: Colors.green,
                               ),
                             )
                           : const Icon(
