@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart'; // Import Firebase Storage
 import 'package:go90stores/adminlogin.dart';
 import 'store_image_picker.dart'; // Import the StoreImagePicker file
 
@@ -15,14 +14,12 @@ class StoreRegistration extends StatefulWidget {
 class _StoreRegistrationState extends State<StoreRegistration> {
   final _formKey = GlobalKey<FormState>();
   File? _storeImage;
-  bool _isUploading = false; // Track upload progress
-
-  final TextEditingController _storenameController = TextEditingController();
+  final TextEditingController _storeNameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _aadharController = TextEditingController();
   final TextEditingController _gstController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
 
   void _setImage(File pickedImage) {
     setState(() {
@@ -42,36 +39,19 @@ class _StoreRegistrationState extends State<StoreRegistration> {
     }
 
     try {
-      setState(() {
-        _isUploading = true; // Start showing loading indicator
-      });
-
-      // Upload the image to Firebase Storage
-      String imageUrl = await _uploadImageToStorage();
-
-      // Generate a unique store ID based on Firebase random ID
-      String uniqueStoreId =
-          FirebaseFirestore.instance.collection('stores').doc().id;
-
-      await FirebaseFirestore.instance
-          .collection('stores')
-          .doc(uniqueStoreId)
-          .set({
-        'storeId': uniqueStoreId,
-        'storename': _storenameController.text,
+      await FirebaseFirestore.instance.collection('stores').add({
+        'storename': _storeNameController.text,
         'aadharNumber': _aadharController.text,
-        'gstNumber': _gstController.text,
         'phone': _phoneController.text,
+        'gstNumber': _gstController.text,
         'email': _emailController.text,
         'password': _passwordController.text,
-        'storeImage': imageUrl, // Store the uploaded image URL
+        'storeImage': 'Uploaded Image URL or Path',
       });
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Store registered successfully!')),
       );
       _formKey.currentState!.reset();
-
       // Navigate to the AdminLogin screen
       Navigator.pushReplacement(
         context,
@@ -79,32 +59,8 @@ class _StoreRegistrationState extends State<StoreRegistration> {
       );
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error during store registration: $error')),
+        SnackBar(content: Text('Error: $error')),
       );
-    } finally {
-      setState(() {
-        _isUploading = false; // Stop loading indicator
-      });
-    }
-  }
-
-  Future<String> _uploadImageToStorage() async {
-    // Ensure that the image is not null
-    if (_storeImage == null) throw 'No image selected';
-
-    // Create a unique file name for the image
-    String fileName = DateTime.now().millisecondsSinceEpoch.toString();
-
-    try {
-      // Upload the image to Firebase Storage
-      Reference storageRef =
-          FirebaseStorage.instance.ref().child('store_images/$fileName');
-      UploadTask uploadTask = storageRef.putFile(_storeImage!);
-      TaskSnapshot snapshot = await uploadTask.whenComplete(() {});
-      String imageUrl = await snapshot.ref.getDownloadURL();
-      return imageUrl; // Return the image URL
-    } catch (error) {
-      throw 'Failed to upload image: $error'; // Throw error if image upload fails
     }
   }
 
@@ -133,7 +89,7 @@ class _StoreRegistrationState extends State<StoreRegistration> {
                   StoreImagePicker(onImagePicked: _setImage),
                   const SizedBox(height: 20),
                   TextFormField(
-                    controller: _storenameController,
+                    controller: _storeNameController,
                     decoration: const InputDecoration(
                       labelText: 'Store Name',
                       hintText: 'Enter your store name',
@@ -142,6 +98,24 @@ class _StoreRegistrationState extends State<StoreRegistration> {
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter a store name';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    controller: _phoneController,
+                    decoration: const InputDecoration(
+                      labelText: 'Phone Number',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter Phone number';
+                      }
+                      if (value.length != 10) {
+                        return 'phone number must be 10 digits';
                       }
                       return null;
                     },
@@ -174,23 +148,6 @@ class _StoreRegistrationState extends State<StoreRegistration> {
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter GST number';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  TextFormField(
-                    controller: _phoneController,
-                    decoration: const InputDecoration(
-                      labelText: 'Phone Number',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter a phone number';
-                      }
-                      if (!RegExp(r'^\d{10,15}$').hasMatch(value)) {
-                        return 'Please enter a valid phone number';
                       }
                       return null;
                     },
@@ -232,21 +189,19 @@ class _StoreRegistrationState extends State<StoreRegistration> {
                     },
                   ),
                   const SizedBox(height: 20),
-                  _isUploading // Display a loading indicator when uploading
-                      ? const CircularProgressIndicator()
-                      : ElevatedButton(
-                          onPressed: _registerStore,
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 30,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          child: const Text('Register Store'),
-                        ),
+                  ElevatedButton(
+                    onPressed: _registerStore,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 30,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Text('Register Store'),
+                  ),
                 ],
               ),
             ),
