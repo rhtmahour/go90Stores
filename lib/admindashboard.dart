@@ -163,9 +163,10 @@ class AdminDashboard extends StatelessWidget {
                                 child: Card(
                                   elevation: 4,
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(16),
                                   ),
                                   child: ListTile(
+                                    tileColor: Colors.purple,
                                     onTap: () {
                                       // Navigate to store details page
                                       showStoreDetailsDialog(context, store.id);
@@ -198,6 +199,7 @@ class AdminDashboard extends StatelessWidget {
                                           style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 30,
+                                            color: Colors.white,
                                           ),
                                         ),
                                         const SizedBox(width: 8),
@@ -223,11 +225,14 @@ class AdminDashboard extends StatelessWidget {
                                           const SizedBox.shrink(),
                                       ],
                                     ),
-                                    subtitle: Text('GST Number: $gstNumber'),
+                                    subtitle: Text(
+                                      'GST Number: $gstNumber',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
                                     trailing: PopupMenuButton<String>(
                                       icon: const Icon(
                                         Icons.more_vert,
-                                        color: Colors.grey,
+                                        color: Colors.white,
                                       ),
                                       onSelected: (String value) async {
                                         final storeId = store.id;
@@ -375,6 +380,7 @@ Widget _buildActivityCard({
   required Color color,
 }) {
   return Card(
+    color: Colors.white,
     elevation: 4,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     child: Padding(
@@ -393,6 +399,7 @@ Widget _buildActivityCard({
               Text(
                 title,
                 style: const TextStyle(
+                  color: Colors.purple,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
@@ -416,6 +423,7 @@ Widget _buildActivityCard({
 
 Widget _buildSummaryCard(String title, IconData icon, Color color) {
   return Card(
+    color: Colors.purple[400],
     elevation: 4,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     child: Padding(

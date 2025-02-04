@@ -16,6 +16,7 @@ class _StoreRegistrationState extends State<StoreRegistration> {
   File? _storeImage;
   final TextEditingController _storeNameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _storeAddressController = TextEditingController();
   final TextEditingController _aadharController = TextEditingController();
   final TextEditingController _gstController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -41,6 +42,7 @@ class _StoreRegistrationState extends State<StoreRegistration> {
     try {
       await FirebaseFirestore.instance.collection('stores').add({
         'storename': _storeNameController.text,
+        'storeAddress': _storeAddressController.text,
         'aadharNumber': _aadharController.text,
         'phone': _phoneController.text,
         'gstNumber': _gstController.text,
@@ -119,6 +121,31 @@ class _StoreRegistrationState extends State<StoreRegistration> {
                       }
                       return null;
                     },
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    controller: _storeAddressController,
+                    decoration: InputDecoration(
+                      labelText: 'Store Address',
+                      hintText: 'Enter store address',
+                      border: OutlineInputBorder(),
+                      errorMaxLines: 2, // Allow multiline error messages
+                    ),
+                    maxLength: 100, // Condition: Limit address length
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Store address is required';
+                      }
+                      if (value.length < 5) {
+                        return 'Address must be at least 5 characters';
+                      }
+                      if (RegExp(r'[!@#\$%^&*(),?":{}|<>]').hasMatch(value)) {
+                        return 'Special characters are not allowed';
+                      }
+                      return null;
+                    },
+                    autovalidateMode: AutovalidateMode
+                        .onUserInteraction, // Validates as user types
                   ),
                   const SizedBox(height: 20),
                   TextFormField(

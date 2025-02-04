@@ -35,7 +35,7 @@ void showStoreDetailsDialog(BuildContext context, String storeId) async {
           final String storename = storeData['storename'] ?? 'N/A';
           final String email = storeData['email'] ?? 'N/A';
           final String phone = storeData['phone'] ?? 'N/A';
-          final String address = storeData['address'] ?? 'N/A';
+          final String address = storeData['storeAddress'] ?? 'N/A';
           final String gstNumber = storeData['gstNumber'] ?? 'N/A';
           final String status = storeData['status'] ?? 'N/A';
           final String imageUrl = storeData['storeImage'] ?? '';
