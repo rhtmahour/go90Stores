@@ -3,10 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:csv/csv.dart';
+import 'package:flutter/services.dart';
 import 'package:go90stores/adminlogin.dart';
 import 'package:go90stores/productcard.dart';
 import 'dart:io';
 import 'dart:convert';
+
+import 'package:go90stores/storedrawerheader.dart';
 
 class MyStore extends StatefulWidget {
   final String storeId;
@@ -214,6 +217,20 @@ class _MyStoreState extends State<MyStore> {
             child: const Text('Logout', style: TextStyle(color: Colors.white)),
           ),
         ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            StoreDrawerHeader(storeId: widget.storeId),
+// Updated drawer header with Firestore data
+            ListTile(
+              leading: Icon(Icons.home),
+              title: Text('Home'),
+            ),
+            // Add other drawer items here...
+          ],
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
