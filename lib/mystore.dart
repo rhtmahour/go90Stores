@@ -1,14 +1,14 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:csv/csv.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:csv/csv.dart';
-import 'package:flutter/services.dart';
 import 'package:go90stores/adminlogin.dart';
+import 'package:go90stores/bestprice.dart';
 import 'package:go90stores/productcard.dart';
-import 'dart:io';
-import 'dart:convert';
-
 import 'package:go90stores/storedrawerheader.dart';
 
 class MyStore extends StatefulWidget {
@@ -55,7 +55,6 @@ class _MyStoreState extends State<MyStore> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   bool _isLoading = false;
   List<Map<String, String>> _products = [];
-
   Future<void> _uploadCsvFile() async {
     setState(() {
       _isLoading = true;
@@ -158,54 +157,20 @@ class _MyStoreState extends State<MyStore> {
     );
   }
 
-  Future<void> _fetchProductsFromFirebase() async {
-    final storeRef =
-        FirebaseDatabase.instance.ref('products/${widget.storeId}');
-    final snapshot = await storeRef.get();
-
-    if (snapshot.exists && snapshot.value != null) {
-      final List<Map<String, String>> products = [];
-      Map<String, dynamic> data = snapshot.value as Map<String, dynamic>;
-      data.forEach((key, value) {
-        products.add({
-          'key': key,
-          'name': value['name']?.toString() ?? '',
-          'salePrice':
-              value['salePrice']?.toString() ?? '', // Ensuring conversion
-          'purchasePrice':
-              value['purchasePrice']?.toString() ?? '', // Ensuring conversion
-          'description': value['description']?.toString() ?? '',
-          'productImage': value['productImage']?.toString() ?? '',
-        });
-      });
-
-      setState(() {
-        _products = products;
-      });
-    } else {
-      setState(() {
-        _products = [];
-      });
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchProductsFromFirebase();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[200],
       appBar: AppBar(
         centerTitle: true,
-        title: const Text('My Store',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'My Store',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.blue, Colors.purple],
+              colors: [Colors.blueAccent, Colors.purpleAccent],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -214,7 +179,10 @@ class _MyStoreState extends State<MyStore> {
         actions: [
           TextButton(
             onPressed: () => _signOut(context),
-            child: const Text('Logout', style: TextStyle(color: Colors.white)),
+            child: const Text(
+              'Logout',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -223,72 +191,119 @@ class _MyStoreState extends State<MyStore> {
           padding: EdgeInsets.zero,
           children: [
             StoreDrawerHeader(storeId: widget.storeId),
-// Updated drawer header with Firestore data
-            ListTile(
+            const ListTile(
               leading: Icon(Icons.home),
               title: Text('Home'),
             ),
-            // Add other drawer items here...
           ],
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ElevatedButton(
-              onPressed: _isLoading ? null : _uploadCsvFile,
-              child: const Text('Upload CSV File'),
-            ),
+            _buildButtonsRow(),
             const SizedBox(height: 16),
-            Expanded(
-              child: StreamBuilder<DatabaseEvent>(
-                stream: FirebaseDatabase.instance
-                    .ref('products/${widget.storeId}')
-                    .onValue,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasData &&
-                      snapshot.data!.snapshot.value != null) {
-                    final List<Map<String, String>> products = [];
-                    Map<String, dynamic> data =
-                        (snapshot.data!.snapshot.value as Map<dynamic, dynamic>)
-                            .cast<String, dynamic>();
-                    data.forEach((key, value) {
-                      products.add({
-                        'key': key,
-                        'name': value['name']?.toString() ?? '',
-                        'salePrice': value['salePrice'] != null
-                            ? value['salePrice'].toString()
-                            : '', // Convert salePrice to string
-                        'purchasePrice': value['purchasePrice'] != null
-                            ? value['purchasePrice'].toString()
-                            : '', // Convert purchasePrice to string
-                        'description': value['description']?.toString() ?? '',
-                        'productImage': value['productImage']?.toString() ?? '',
-                      });
-                    });
-
-                    return ListView.builder(
-                      itemCount: products.length,
-                      itemBuilder: (context, index) {
-                        return ProductCard(
-                          product: products[index],
-                          onUpdate: _fetchProductsFromFirebase,
-                          storeId: widget.storeId,
-                        );
-                      },
-                    );
-                  } else {
-                    return const Center(child: Text('No products to display'));
-                  }
-                },
-              ),
-            ),
+            Expanded(child: _buildProductList()),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildButtonsRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: _buildButton(
+            text: "Upload CSV",
+            icon: Icons.upload_file,
+            onPressed: _isLoading ? null : _uploadCsvFile,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _buildButton(
+            text: "Best Price",
+            icon: Icons.monetization_on,
+            onPressed: _isLoading
+                ? null
+                : () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const BestPriceCalulate()),
+                    );
+                  },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProductList() {
+    return StreamBuilder<DatabaseEvent>(
+      stream:
+          FirebaseDatabase.instance.ref('products/${widget.storeId}').onValue,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasData && snapshot.data!.snapshot.value != null) {
+          final List<Map<String, String>> products = [];
+          Map<String, dynamic> data =
+              (snapshot.data!.snapshot.value as Map<dynamic, dynamic>)
+                  .cast<String, dynamic>();
+          data.forEach((key, value) {
+            products.add({
+              'key': key,
+              'name': value['name']?.toString() ?? '',
+              'salePrice': value['salePrice']?.toString() ?? '',
+              'purchasePrice': value['purchasePrice']?.toString() ?? '',
+              'description': value['description']?.toString() ?? '',
+              'productImage': value['productImage']?.toString() ?? '',
+            });
+          });
+
+          return ListView.builder(
+            itemCount: products.length,
+            itemBuilder: (context, index) {
+              return ProductCard(
+                product: products[index],
+                onUpdate: () {},
+                storeId: widget.storeId,
+              );
+            },
+          );
+        } else {
+          return const Center(
+            child: Text(
+              'No products available',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+          );
+        }
+      },
+    );
+  }
+
+  Widget _buildButton(
+      {required String text,
+      required IconData icon,
+      required VoidCallback? onPressed}) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 20),
+      label: Text(text,
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        foregroundColor: Colors.white,
+        backgroundColor: Colors.blueAccent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        elevation: 1,
       ),
     );
   }

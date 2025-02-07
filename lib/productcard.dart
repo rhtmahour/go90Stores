@@ -91,7 +91,7 @@ class ProductCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        "Purchase Price: ₹$purchasePrice\n"
+                        "Buy Price: ₹$purchasePrice\n"
                         "Sale Price: ₹$salePrice\n"
                         "Description: $shortDescription",
                       ),
@@ -127,11 +127,7 @@ class ProductCard extends StatelessWidget {
                     ),
                     const PopupMenuItem(
                       value: 'Edit Purchase Price',
-                      child: Text('Edit Purchase Price'),
-                    ),
-                    const PopupMenuItem(
-                      value: 'Enter Quote Price',
-                      child: Text('Quote Price'),
+                      child: Text('Edit Buy Price'),
                     ),
                   ],
                 ),
