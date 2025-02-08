@@ -187,11 +187,14 @@ class _MyStoreState extends State<MyStore> {
         ],
       ),
       drawer: Drawer(
+        backgroundColor: Colors.white,
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
             StoreDrawerHeader(storeId: widget.storeId),
             const ListTile(
+              iconColor: Colors.purple,
+              textColor: Colors.purple,
               leading: Icon(Icons.home),
               title: Text('Home'),
             ),
