@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go90stores/admindashboard.dart';
+import 'package:go90stores/customerdashboard.dart'; // ✅ New customer dashboard
+import 'package:go90stores/customersignup.dart';
 import 'package:go90stores/mystore.dart';
 import 'package:go90stores/store_registration.dart';
 
@@ -14,7 +16,7 @@ class AdminLogin extends StatefulWidget {
 
 class _AdminLoginState extends State<AdminLogin> {
   bool _passwordVisible = false;
-  bool _showAdminLogin = true;
+  String _selectedRole = 'Admin'; // ✅ Track selected login role
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -40,8 +42,8 @@ class _AdminLoginState extends State<AdminLogin> {
     });
 
     try {
-      if (_showAdminLogin) {
-        // Admin Login
+      if (_selectedRole == 'Admin') {
+        // ✅ Admin Login
         UserCredential userCredential = await _auth.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
@@ -51,8 +53,8 @@ class _AdminLoginState extends State<AdminLogin> {
           context,
           MaterialPageRoute(builder: (context) => const AdminDashboard()),
         );
-      } else {
-        // Store Login
+      } else if (_selectedRole == 'Store') {
+        // ✅ Store Login
         final email = _emailController.text.trim();
         final password = _passwordController.text.trim();
 
@@ -63,7 +65,6 @@ class _AdminLoginState extends State<AdminLogin> {
             .get();
 
         if (querySnapshot.docs.isNotEmpty) {
-          // Retrieve the storeId
           final storeId = querySnapshot.docs.first.id;
 
           Navigator.pushReplacement(
@@ -73,6 +74,17 @@ class _AdminLoginState extends State<AdminLogin> {
         } else {
           throw Exception('Invalid email or password for Store Login.');
         }
+      } else if (_selectedRole == 'Customer') {
+        // ✅ Customer Login
+        UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const Customerdashboard()),
+        );
       }
     } on FirebaseAuthException catch (e) {
       String errorMessage = "An error occurred. Please try again.";
@@ -122,47 +134,26 @@ class _AdminLoginState extends State<AdminLogin> {
             ),
             child: Column(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          _showAdminLogin = true; // Show Admin Login
-                        });
-                      },
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 18.0, horizontal: 24.0),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15.0),
-                          side: const BorderSide(color: Colors.black, width: 2),
-                        ),
-                      ),
-                      child: const Text(
-                        'Admin Login',
-                        style: TextStyle(fontSize: 16),
-                      ),
+                // ✅ Add Role Selection
+                DropdownButton<String>(
+                  value: _selectedRole,
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedRole = value!;
+                    });
+                  },
+                  items: const [
+                    DropdownMenuItem(
+                      value: 'Admin',
+                      child: Text('Admin Login'),
                     ),
-                    const SizedBox(width: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          _showAdminLogin = false; // Show Store Login
-                        });
-                      },
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 18.0, horizontal: 24.0),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15.0),
-                          side: const BorderSide(color: Colors.black, width: 2),
-                        ),
-                      ),
-                      child: const Text(
-                        'Store Login',
-                        style: TextStyle(fontSize: 16),
-                      ),
+                    DropdownMenuItem(
+                      value: 'Store',
+                      child: Text('Store Login'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'Customer',
+                      child: Text('Customer Login'),
                     ),
                   ],
                 ),
@@ -180,7 +171,7 @@ class _AdminLoginState extends State<AdminLogin> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Text(
-                          _showAdminLogin ? 'Admin Login' : 'Store Login',
+                          'Login as $_selectedRole',
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             fontSize: 24,
@@ -240,7 +231,7 @@ class _AdminLoginState extends State<AdminLogin> {
                                   style: TextStyle(fontSize: 16),
                                 ),
                               ),
-                        if (!_showAdminLogin)
+                        if (_selectedRole == 'Store')
                           TextButton(
                             onPressed: () {
                               Navigator.of(context).push(
@@ -250,6 +241,19 @@ class _AdminLoginState extends State<AdminLogin> {
                               );
                             },
                             child: const Text('Register Store'),
+                          ),
+                        if (_selectedRole == 'Customer')
+                          TextButton(
+                            onPressed: () {
+                              // ✅ Navigate to Customer Sign-Up Page
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const CustomerSignUp()),
+                              );
+                            },
+                            child: const Text('Customer SignUp'),
                           ),
                       ],
                     ),

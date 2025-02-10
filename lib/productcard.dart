@@ -25,7 +25,9 @@ class ProductCard extends StatelessWidget {
 
     String salePrice = product['salePrice']?.toString() ?? 'N/A';
     String purchasePrice = product['purchasePrice']?.toString() ?? 'N/A';
-    String QuotePrice = product['purchasePrice']?.toString() ?? 'N/A';
+    String quantity = product['Quantity']?.toString() ??
+        product['quantity']?.toString() ??
+        'N/A';
 
     return Card(
       elevation: 4,
@@ -93,6 +95,7 @@ class ProductCard extends StatelessWidget {
                       Text(
                         "Buy Price: ₹$purchasePrice\n"
                         "Sale Price: ₹$salePrice\n"
+                        "Stock: $quantity\n"
                         "Description: $shortDescription",
                       ),
                     ],
@@ -103,31 +106,36 @@ class ProductCard extends StatelessWidget {
                     if (value == 'Edit Sale Price') {
                       _showEditDialog(context, 'Sale Price', salePrice,
                           (newValue) {
-                        _updateProductPrice(
+                        _updateProductField(
                             context, product['key'], 'salePrice', newValue);
                       });
                     } else if (value == 'Edit Purchase Price') {
                       _showEditDialog(context, 'Purchase Price', purchasePrice,
                           (newValue) {
-                        _updateProductPrice(
+                        _updateProductField(
                             context, product['key'], 'purchasePrice', newValue);
                       });
-                    } else if (value == 'Edit Purchase Price') {
-                      _showEditDialog(context, 'Purchase Price', purchasePrice,
-                          (newValue) {
-                        _updateProductPrice(
-                            context, product['key'], 'purchasePrice', newValue);
+                    } else if (value == 'Edit stock') {
+                      // ✅ Fix: Correctly handle stock updates
+                      _showEditDialog(context, 'Stock', quantity, (newValue) {
+                        _updateProductField(
+                            context, product['key'], 'Quantity', newValue);
                       });
                     }
                   },
                   itemBuilder: (context) => [
                     const PopupMenuItem(
                       value: 'Edit Sale Price',
-                      child: Text('Edit Sale Price'),
+                      child: Text('Update Sale Price'),
                     ),
                     const PopupMenuItem(
                       value: 'Edit Purchase Price',
-                      child: Text('Edit Buy Price'),
+                      child: Text('Update Buy Price'),
+                    ),
+                    const PopupMenuItem(
+                      // ✅ Fix: Properly update stock
+                      value: 'Edit stock',
+                      child: Text('Update Stock'),
                     ),
                   ],
                 ),
@@ -172,17 +180,17 @@ class ProductCard extends StatelessWidget {
     );
   }
 
-  void _updateProductPrice(
+  void _updateProductField(
       BuildContext context, String key, String field, String newValue) async {
-    final databaseRef = FirebaseDatabase.instance
-        .ref('products/$storeId/$key'); // Ensure correct path
+    final databaseRef = FirebaseDatabase.instance.ref('products/$storeId/$key');
 
     try {
-      // Convert the new value to double before updating
-      await databaseRef.update({field: double.parse(newValue)});
-      onUpdate(); // Refresh the UI
+      await databaseRef.update({
+        field: int.tryParse(newValue) ?? newValue
+      }); // ✅ Allow both numbers and text
+      onUpdate(); // Refresh UI
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Product price updated successfully!')),
+        SnackBar(content: Text('Product $field updated successfully!')),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

@@ -130,13 +130,16 @@ class _MyStoreState extends State<MyStore> {
 
   Future<void> _saveProducts(
       List<List<dynamic>> fields, DatabaseReference storeRef) async {
-    await storeRef.remove();
+    await storeRef.remove(); // Remove old data before saving new
     final products = fields.skip(1).map((row) async {
       final product = {
         'id': row.length > 0 ? row[0]?.toString() ?? '' : '',
         'name': row.length > 1 ? row[1]?.toString() ?? '' : '',
         'salePrice': row.length > 2 ? row[2]?.toString() ?? '' : '',
         'purchasePrice': row.length > 3 ? row[3]?.toString() ?? '' : '',
+        'quantity': row.length > 4
+            ? row[4]?.toString() ?? '0'
+            : '0', // ✅ Fix: Store as lowercase
         'description': row.length > 6 ? row[6]?.toString() ?? '' : '',
         'productImage': row.length > 7 ? row[7]?.toString().trim() ?? '' : '',
       };
@@ -263,6 +266,10 @@ class _MyStoreState extends State<MyStore> {
               'name': value['name']?.toString() ?? '',
               'salePrice': value['salePrice']?.toString() ?? '',
               'purchasePrice': value['purchasePrice']?.toString() ?? '',
+              'quantity': value['Quantity']?.toString() ??
+                  value['quantity']?.toString() ??
+                  'N/A',
+              // ✅ Fix: Ensure 'Quantity' matches the saved field
               'description': value['description']?.toString() ?? '',
               'productImage': value['productImage']?.toString() ?? '',
             });
