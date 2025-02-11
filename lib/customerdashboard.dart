@@ -10,6 +10,14 @@ class Customerdashboard extends StatefulWidget {
 class _CustomerdashboardState extends State<Customerdashboard> {
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Scaffold(
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text("Customer Dashborad"),
+      ),
+      body: Center(
+        child: Text("Welcome to the Customer Dashboard"),
+      ),
+    );
   }
 }
