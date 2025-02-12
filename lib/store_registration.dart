@@ -72,6 +72,15 @@ class _StoreRegistrationState extends State<StoreRegistration> {
       appBar: AppBar(
         centerTitle: true,
         title: const Text('Store Registration'),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blueAccent, Colors.purpleAccent],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
       ),
       body: Center(
         child: Padding(

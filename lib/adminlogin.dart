@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go90stores/admindashboard.dart';
-import 'package:go90stores/customerdashboard.dart'; // ✅ New customer dashboard
-import 'package:go90stores/customerregisterscreen.dart';
+import 'package:go90stores/customerdashboard.dart';
+import 'package:go90stores/customersignup.dart';
 import 'package:go90stores/mystore.dart';
 import 'package:go90stores/store_registration.dart';
 
@@ -42,14 +42,11 @@ class _AdminLoginState extends State<AdminLogin> {
     });
 
     try {
-      final email = _emailController.text.trim();
-      final password = _passwordController.text.trim();
-
       if (_selectedRole == 'Admin') {
         // ✅ Admin Login
         UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-          email: email,
-          password: password,
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
         );
 
         Navigator.pushReplacement(
@@ -58,11 +55,13 @@ class _AdminLoginState extends State<AdminLogin> {
         );
       } else if (_selectedRole == 'Store') {
         // ✅ Store Login
+        final email = _emailController.text.trim();
+        final password = _passwordController.text.trim();
+
         final querySnapshot = await _firestore
             .collection('stores')
             .where('email', isEqualTo: email)
-            .where('password',
-                isEqualTo: password) // ❗️ Ideally, use hashed passwords
+            .where('password', isEqualTo: password)
             .get();
 
         if (querySnapshot.docs.isNotEmpty) {
@@ -77,21 +76,15 @@ class _AdminLoginState extends State<AdminLogin> {
         }
       } else if (_selectedRole == 'Customer') {
         // ✅ Customer Login
-        final querySnapshot = await _firestore
-            .collection('customers')
-            .where('email', isEqualTo: email)
-            .where('password',
-                isEqualTo: password) // ❗️ Ideally, use hashed passwords
-            .get();
+        UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
 
-        if (querySnapshot.docs.isNotEmpty) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const Customerdashboard()),
-          );
-        } else {
-          throw Exception('Invalid email or password for Customer Login.');
-        }
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const Customerdashboard()),
+        );
       }
     } on FirebaseAuthException catch (e) {
       String errorMessage = "An error occurred. Please try again.";
@@ -257,10 +250,10 @@ class _AdminLoginState extends State<AdminLogin> {
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) =>
-                                        const CustomerRegistration()),
+                                        const CustomerSignUp()),
                               );
                             },
-                            child: const Text('Customer Register'),
+                            child: const Text('Customer Sign-Up'),
                           ),
                       ],
                     ),
