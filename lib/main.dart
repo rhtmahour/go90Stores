@@ -35,7 +35,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.purple,
-          brightness: Brightness.dark,
+          brightness: Brightness.light,
         ),
         textTheme: TextTheme(
           displayLarge: const TextStyle(

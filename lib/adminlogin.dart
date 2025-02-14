@@ -137,6 +137,7 @@ class _AdminLoginState extends State<AdminLogin> {
                 // ✅ Add Role Selection
                 DropdownButton<String>(
                   value: _selectedRole,
+                  iconEnabledColor: Colors.white,
                   onChanged: (value) {
                     setState(() {
                       _selectedRole = value!;
@@ -145,15 +146,24 @@ class _AdminLoginState extends State<AdminLogin> {
                   items: const [
                     DropdownMenuItem(
                       value: 'Admin',
-                      child: Text('Admin Login'),
+                      child: Text(
+                        'Admin Login',
+                        style: TextStyle(color: Colors.purple),
+                      ),
                     ),
                     DropdownMenuItem(
                       value: 'Store',
-                      child: Text('Store Login'),
+                      child: Text(
+                        'Store Login',
+                        style: TextStyle(color: Colors.purple),
+                      ),
                     ),
                     DropdownMenuItem(
                       value: 'Customer',
-                      child: Text('Customer Login'),
+                      child: Text(
+                        'Customer Login',
+                        style: TextStyle(color: Colors.purple),
+                      ),
                     ),
                   ],
                 ),
@@ -201,7 +211,7 @@ class _AdminLoginState extends State<AdminLogin> {
                                 _passwordVisible
                                     ? Icons.visibility
                                     : Icons.visibility_off,
-                                color: Theme.of(context).primaryColorLight,
+                                color: Theme.of(context).primaryColorDark,
                               ),
                               onPressed: () {
                                 setState(() {

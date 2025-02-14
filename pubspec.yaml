@@ -48,6 +48,8 @@ dependencies:
   firebase_database: ^11.3.1
   firebase_storage: ^12.4.0
   share_plus: ^10.1.4
+  carousel_slider: ^5.0.0
+  dots_indicator: ^4.0.0
 
 dev_dependencies:
   flutter_test:
@@ -82,6 +84,30 @@ flutter:
     - assets/images/placeholder.png
     - assets/images/store.png
     - assets/images/back.jpg
+    - assets/images/slider11.webp
+    - assets/images/slider12.webp
+    - assets/images/slider13.webp
+    - assets/images/slider14.webp
+    - assets/images/slider15.webp
+    - assets/images/fruits2.png
+    - assets/images/vegetables.png
+    - assets/images/meat1.png
+    - assets/images/dairy_products.png
+    - assets/images/cold_drink1.png
+    - assets/images/bakery.png
+    - assets/images/coffee.png
+    - assets/images/instant-food.png
+    - assets/images/slider1.webp
+    - assets/images/slider2.webp
+    - assets/images/slider3.webp
+    - assets/images/slider4.webp
+    - assets/images/slider5.webp
+    - assets/images/tata.png
+    - assets/images/dettol.png
+    - assets/images/coca_cola.png
+    - assets/images/loreal.png
+    - assets/images/india_gate.png
+    - assets/images/catch.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
