@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go90stores/productpage.dart';
 
 class Category extends StatelessWidget {
   const Category({Key? key}) : super(key: key);
@@ -64,7 +65,16 @@ class Category extends StatelessWidget {
   Widget _buildCategoryItem(
       BuildContext context, String imagePath, String label, double size) {
     return InkWell(
-      onTap: () {},
+      onTap: () {
+        // Add navigation logic here
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => const ProductPage(
+                    storeId: '',
+                  )),
+        );
+      },
       borderRadius: BorderRadius.circular(15),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center, // Proper alignment

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go90stores/adminlogin.dart';
@@ -7,7 +8,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go90stores/brandpage.dart';
 import 'package:go90stores/category.dart';
 import 'package:go90stores/homebottombar.dart';
-import 'package:go90stores/myaccountpage.dart';
 import 'package:go90stores/productsearch.dart';
 import 'package:go90stores/slider1.dart';
 import 'package:go90stores/slider2.dart';
@@ -29,36 +29,6 @@ class _CustomerdashboardState extends State<Customerdashboard> {
   String? phoneNumber;
   String? email;
   bool _isLoggedIn = false;
-  Future<void> _signOut(BuildContext context) async {
-    final bool? confirmLogout = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Logout"),
-          content: const Text("Do you want to logout?"),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text("No"),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text("Yes"),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirmLogout == true) {
-      await _auth.signOut();
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const AdminLogin()),
-        (route) => false,
-      );
-    }
-  }
 
   Future<void> pickImage() async {
     try {
@@ -74,6 +44,32 @@ class _CustomerdashboardState extends State<Customerdashboard> {
     }
   }
 
+  Future<void> _fetchUserData() async {
+    User? currentUser = _auth.currentUser;
+
+    if (currentUser != null) {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('customers') // Change this collection name if necessary
+          .doc(currentUser.uid)
+          .get();
+
+      if (userDoc.exists) {
+        setState(() {
+          name = userDoc['name'] ?? 'No name available';
+          phoneNumber = userDoc['phoneNumber'] ?? 'No phone number available';
+          email = currentUser.email;
+          _isLoggedIn = true;
+        });
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -84,12 +80,11 @@ class _CustomerdashboardState extends State<Customerdashboard> {
           style: TextStyle(color: Colors.white),
         ),
         actions: [
-          TextButton(
-            onPressed: () => _signOut(context),
-            child: const Text(
-              'Logout',
-              style: TextStyle(color: Colors.white),
-            ),
+          IconButton(
+            onPressed: () {
+              // Add shopping cart functionality here
+            },
+            icon: Icon(Icons.shopping_cart, color: Colors.white),
           ),
         ],
         flexibleSpace: Container(
@@ -111,7 +106,7 @@ class _CustomerdashboardState extends State<Customerdashboard> {
               width: double.maxFinite,
               child: DrawerHeader(
                 decoration: BoxDecoration(
-                  color: Colors.purple[100],
+                  color: Colors.blue,
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -119,7 +114,7 @@ class _CustomerdashboardState extends State<Customerdashboard> {
                     Padding(
                       padding: const EdgeInsets.only(left: 200, bottom: 30),
                       child: IconButton(
-                        icon: Icon(Icons.edit, color: Colors.purple),
+                        icon: Icon(Icons.edit, color: Colors.white),
                         onPressed: () {},
                       ),
                     ),
@@ -245,6 +240,9 @@ class _CustomerdashboardState extends State<Customerdashboard> {
                   await FirebaseAuth.instance.signOut();
                   setState(() {
                     _isLoggedIn = false;
+                    name = null;
+                    phoneNumber = null;
+                    email = null;
                   });
                 },
               )
@@ -252,16 +250,14 @@ class _CustomerdashboardState extends State<Customerdashboard> {
               PrettyFuzzyButton(
                 text: 'Login',
                 onPressed: () async {
-                  // Handle login logic here
                   Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const MyAccountPage()));
-                  setState(() {
-                    _isLoggedIn = true;
+                    context,
+                    MaterialPageRoute(builder: (context) => const AdminLogin()),
+                  ).then((_) {
+                    _fetchUserData(); // Refresh user data after login
                   });
                 },
-              ),
+              )
           ],
         ),
       ),

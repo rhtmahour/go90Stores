@@ -168,7 +168,7 @@ class _MyStoreState extends State<MyStore> {
         centerTitle: true,
         title: const Text(
           'My Store',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
@@ -180,12 +180,15 @@ class _MyStoreState extends State<MyStore> {
           ),
         ),
         actions: [
-          TextButton(
+          IconButton(
+            onPressed: () {
+              // Add notification functionality here
+            },
+            icon: Icon(Icons.notifications, color: Colors.white),
+          ),
+          IconButton(
             onPressed: () => _signOut(context),
-            child: const Text(
-              'Logout',
-              style: TextStyle(color: Colors.white),
-            ),
+            icon: Icon(Icons.logout, color: Colors.white),
           ),
         ],
       ),
