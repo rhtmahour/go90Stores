@@ -6,12 +6,14 @@ import 'package:flutter/services.dart';
 import 'package:go90stores/adminlogin.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go90stores/brandpage.dart';
+import 'package:go90stores/cartpage.dart';
 import 'package:go90stores/category.dart';
 import 'package:go90stores/homebottombar.dart';
 import 'package:go90stores/productsearch.dart';
 import 'package:go90stores/slider1.dart';
 import 'package:go90stores/slider2.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:badges/badges.dart' as badges;
 
 class Customerdashboard extends StatefulWidget {
   const Customerdashboard({super.key});
@@ -80,12 +82,27 @@ class _CustomerdashboardState extends State<Customerdashboard> {
           style: TextStyle(color: Colors.white),
         ),
         actions: [
-          IconButton(
-            onPressed: () {
-              // Add shopping cart functionality here
+          InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => CartPage()),
+              );
             },
-            icon: Icon(Icons.shopping_cart, color: Colors.white),
+            child: Center(
+              child: badges.Badge(
+                badgeContent: Text(
+                  '0', // Add a default value or a dynamic value here
+                  style: TextStyle(color: Colors.white),
+                ),
+                child: Icon(
+                  Icons.shopping_cart,
+                  color: Colors.white,
+                ),
+              ),
+            ),
           ),
+          SizedBox(width: 16),
         ],
         flexibleSpace: Container(
           decoration: const BoxDecoration(
