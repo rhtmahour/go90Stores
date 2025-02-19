@@ -24,27 +24,30 @@ class _ProductPageState extends State<ProductPage> {
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         actions: [
-          InkWell(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => CartPage()),
+          Consumer<CartProvider>(
+            builder: (context, cartProvider, child) {
+              return InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => CartPage()),
+                  );
+                },
+                child: Center(
+                  child: badges.Badge(
+                    badgeContent: Text(
+                      cartProvider.counter
+                          .toString(), // Instead of getCounter()
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    child: Icon(
+                      Icons.shopping_cart,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
               );
             },
-            child: Center(
-              child: badges.Badge(
-                badgeContent: Text(
-                  cartProvider
-                      .getCounter()
-                      .toString(), // Add a default value or a dynamic value here
-                  style: TextStyle(color: Colors.white),
-                ),
-                child: Icon(
-                  Icons.shopping_cart,
-                  color: Colors.white,
-                ),
-              ),
-            ),
           ),
           SizedBox(width: 16),
         ],
@@ -201,28 +204,27 @@ class ProductCard extends StatelessWidget {
             ],
           ),
         ),
+        // Positioned add button at bottom-right
         Positioned(
           bottom: 8,
           right: 8,
-          child: FloatingActionButton.small(
-            onPressed: () {
-              final cartProvider =
-                  Provider.of<CartProvider>(context, listen: false);
-              cartProvider.addItemToCart(product);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('${product['name']} added to cart!'),
-                ),
+          child: Consumer<CartProvider>(
+            builder: (context, cartProvider, child) {
+              return FloatingActionButton.small(
+                onPressed: () {
+                  cartProvider.addItemToCart(product);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${product['name']} added to cart!'),
+                    ),
+                  );
+                },
+                backgroundColor: Colors.purple,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30)),
+                child: const Icon(Icons.add, color: Colors.white, size: 20),
               );
             },
-            backgroundColor: Colors.purple,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-            child: const Icon(
-              Icons.add,
-              color: Colors.white,
-              size: 20,
-            ),
           ),
         ),
       ],

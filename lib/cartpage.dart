@@ -28,7 +28,7 @@ class CartPage extends StatelessWidget {
             child: Center(
               child: badges.Badge(
                 badgeContent: Text(
-                  cartProvider.getCounter().toString(),
+                  cartProvider.counter.toString(), // Instead of getCounter()
                   style: TextStyle(color: Colors.white),
                 ),
                 child: Icon(
@@ -130,7 +130,10 @@ class CartPage extends StatelessWidget {
                       ),
                     ),
                     child: Image.network(
-                      product['images'][0]['src'],
+                      (product['images'] != null &&
+                              product['images'].isNotEmpty)
+                          ? product['images'][0]['src']
+                          : 'https://via.placeholder.com/70', // Fallback image
                       width: 70,
                       height: 70,
                       fit: BoxFit.cover,

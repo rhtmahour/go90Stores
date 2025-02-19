@@ -94,9 +94,32 @@ class ProductCard extends StatelessWidget {
                       const SizedBox(height: 8),
                       Text(
                         "Buy Price: ₹$purchasePrice\n"
-                        "Sale Price: ₹$salePrice\n"
-                        "Stock: $quantity\n"
+                        "Sale Price: ₹$salePrice\n",
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      Row(
+                        children: [
+                          const Text(
+                            "Stock: ",
+                            style: TextStyle(fontSize: 16),
+                          ),
+                          Text(
+                            quantity,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: int.tryParse(quantity) != null &&
+                                      int.parse(quantity) < 10
+                                  ? Colors.red // 🔴 Stock < 10 → Red color
+                                  : Colors
+                                      .black, // ⚫ Normal stock → Black color
+                            ),
+                          ),
+                        ],
+                      ),
+                      Text(
                         "Description: $shortDescription",
+                        style: const TextStyle(fontSize: 14),
                       ),
                     ],
                   ),

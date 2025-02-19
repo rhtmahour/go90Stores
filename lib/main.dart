@@ -1,17 +1,23 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go90stores/adminlogin.dart';
+import 'package:go90stores/cart_provider.dart';
 import 'package:go90stores/firebase_options.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  await signInAnonymously(); // Sign in anonymously before accessing the database
-  runApp(const MyApp());
+  await signInAnonymously();
+  // Sign in anonymously before accessing the database
+
+  runApp(
+    ChangeNotifierProvider(create: (context) => CartProvider(), child: MyApp()),
+  );
 }
 
 Future<void> signInAnonymously() async {

@@ -50,13 +50,14 @@ class CartProvider with ChangeNotifier {
     }
   }
 
-  int getCounter() => _counter;
+  int get counter => _counter; // Ensure this exists in CartProvider
+//Change method to getter
 
   double getTotalPrice() {
     double total = 0.0;
     for (var item in _cartItems) {
-      // Cast the result of multiplication to double explicitly
-      total += double.parse(item['price']) * item['quantity'] as double;
+      double price = double.tryParse(item['salePrice'].toString()) ?? 0.0;
+      total += price * (item['quantity'] as int);
     }
     return total;
   }

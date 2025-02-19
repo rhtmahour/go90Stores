@@ -81,29 +81,6 @@ class _CustomerdashboardState extends State<Customerdashboard> {
           "Home",
           style: TextStyle(color: Colors.white),
         ),
-        actions: [
-          InkWell(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => CartPage()),
-              );
-            },
-            child: Center(
-              child: badges.Badge(
-                badgeContent: Text(
-                  '0', // Add a default value or a dynamic value here
-                  style: TextStyle(color: Colors.white),
-                ),
-                child: Icon(
-                  Icons.shopping_cart,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-          SizedBox(width: 16),
-        ],
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
