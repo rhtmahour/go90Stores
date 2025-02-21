@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:csv/csv.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -8,8 +7,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go90stores/adminlogin.dart';
 import 'package:go90stores/bestprice.dart';
+import 'package:go90stores/notificationscreen.dart';
 import 'package:go90stores/productcard.dart';
 import 'package:go90stores/storedrawerheader.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class MyStore extends StatefulWidget {
   final String storeId;
@@ -52,9 +53,85 @@ class _MyStoreState extends State<MyStore> {
     }
   }
 
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   bool _isLoading = false;
+  int lowStockCount = 0;
   List<Map<String, String>> _products = [];
+  void _checkLowStockProducts() {
+    DatabaseReference storeRef =
+        FirebaseDatabase.instance.ref('products/${widget.storeId}');
+
+    storeRef.onValue.listen((event) {
+      if (!mounted) return;
+
+      final data = event.snapshot.value;
+      if (data == null || data is! Map<dynamic, dynamic>) {
+        setState(() {
+          lowStockCount = 0;
+        });
+        return;
+      }
+
+      List<Map<String, dynamic>> lowStockProducts = [];
+      int count = 0;
+
+      (data as Map<dynamic, dynamic>).forEach((key, value) {
+        if (value is Map<dynamic, dynamic>) {
+          int stock = int.tryParse(value['quantity']?.toString() ??
+                  value['Quantity']?.toString() ??
+                  '0') ??
+              0;
+          if (stock < 10) {
+            lowStockProducts.add({
+              'name': value['name'] ?? 'Unknown Product',
+              'quantity': stock.toString(),
+            });
+            count++;
+          }
+        }
+      });
+
+      if (mounted) {
+        setState(() {
+          lowStockCount = count;
+        });
+
+        if (lowStockProducts.isNotEmpty) {
+          _showLowStockNotification(lowStockProducts);
+        }
+      }
+    });
+  }
+
+  Future<void> _showLowStockNotification(
+      List<Map<String, dynamic>> lowStockProducts) async {
+    for (var product in lowStockProducts) {
+      final String productName = product['name'] ?? 'Unknown Product';
+      final String stockQuantity = product['quantity'] ?? 'N/A';
+
+      const AndroidNotificationDetails androidDetails =
+          AndroidNotificationDetails(
+        'low_stock_channel',
+        'Low Stock Alerts',
+        importance: Importance.max,
+        priority: Priority.high,
+        showWhen: true,
+      );
+
+      const NotificationDetails notificationDetails =
+          NotificationDetails(android: androidDetails);
+
+      await flutterLocalNotificationsPlugin.show(
+        0,
+        'Low Stock Alert',
+        '$productName is low on stock! Only $stockQuantity left.',
+        notificationDetails,
+      );
+    }
+  }
+
   Future<void> _uploadCsvFile() async {
     setState(() {
       _isLoading = true;
@@ -161,6 +238,12 @@ class _MyStoreState extends State<MyStore> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _checkLowStockProducts();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[200],
@@ -180,15 +263,63 @@ class _MyStoreState extends State<MyStore> {
           ),
         ),
         actions: [
-          IconButton(
-            onPressed: () {
-              // Add notification functionality here
-            },
-            icon: Icon(Icons.notifications, color: Colors.white),
+          Stack(
+            clipBehavior: Clip.none, // Ensures the badge isn't clipped
+            children: [
+              IconButton(
+                onPressed: () {
+                  List<Map<String, dynamic>> lowStockProducts =
+                      _products.where((product) {
+                    int stock = int.tryParse(product['quantity'] ?? '0') ?? 0;
+                    return stock > 0 && stock < 10;
+                  }).toList();
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => NotificationScreen(
+                          lowStockProducts: lowStockProducts),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.notifications, color: Colors.white),
+              ),
+              if (lowStockCount > 0)
+                Positioned(
+                  right: -2, // Moves badge further right to avoid overlap
+                  top: 6, // Slightly adjusted for better alignment
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    constraints: BoxConstraints(
+                      minWidth: 18,
+                      minHeight: 18,
+                      maxWidth: 30, // Allows enough space for 3-digit numbers
+                    ),
+                    child: FittedBox(
+                      fit: BoxFit
+                          .scaleDown, // Ensures the text fits within the box
+                      child: Text(
+                        lowStockCount > 999 ? '999+' : '$lowStockCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
           IconButton(
             onPressed: () => _signOut(context),
-            icon: Icon(Icons.logout, color: Colors.white),
+            icon: const Icon(Icons.logout, color: Colors.white),
           ),
         ],
       ),
@@ -283,7 +414,9 @@ class _MyStoreState extends State<MyStore> {
             itemBuilder: (context, index) {
               return ProductCard(
                 product: products[index],
-                onUpdate: () {},
+                onUpdate: () {}, // Keep as is
+                onStockUpdated:
+                    _checkLowStockProducts, // ✅ Pass function to update stock count
                 storeId: widget.storeId,
               );
             },

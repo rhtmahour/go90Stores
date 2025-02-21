@@ -5,12 +5,15 @@ import 'package:shimmer/shimmer.dart';
 class ProductCard extends StatelessWidget {
   final Map<String, dynamic> product;
   final Function() onUpdate;
+  final Function()
+      onStockUpdated; // ✅ Added function to update stock in MyStore
   final String storeId;
 
   const ProductCard({
     Key? key,
     required this.product,
     required this.onUpdate,
+    required this.onStockUpdated, // ✅ Pass from MyStore
     required this.storeId,
   }) : super(key: key);
 
@@ -208,10 +211,11 @@ class ProductCard extends StatelessWidget {
     final databaseRef = FirebaseDatabase.instance.ref('products/$storeId/$key');
 
     try {
-      await databaseRef.update({
-        field: int.tryParse(newValue) ?? newValue
-      }); // ✅ Allow both numbers and text
-      onUpdate(); // Refresh UI
+      await databaseRef.update({field: int.tryParse(newValue) ?? newValue});
+
+      onUpdate(); // Refresh UI in ProductCard
+      onStockUpdated(); // ✅ Refresh low stock count in MyStore
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Product $field updated successfully!')),
       );
