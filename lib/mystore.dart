@@ -59,50 +59,50 @@ class _MyStoreState extends State<MyStore> {
   bool _isLoading = false;
   int lowStockCount = 0;
   List<Map<String, String>> _products = [];
-  void _checkLowStockProducts() {
+
+  void _checkLowStockProducts() async {
     DatabaseReference storeRef =
         FirebaseDatabase.instance.ref('products/${widget.storeId}');
 
-    storeRef.onValue.listen((event) {
-      if (!mounted) return;
+    final event = await storeRef.get();
+    if (!mounted) return;
 
-      final data = event.snapshot.value;
-      if (data == null || data is! Map<dynamic, dynamic>) {
-        setState(() {
-          lowStockCount = 0;
-        });
-        return;
-      }
-
-      List<Map<String, dynamic>> lowStockProducts = [];
-      int count = 0;
-
-      (data as Map<dynamic, dynamic>).forEach((key, value) {
-        if (value is Map<dynamic, dynamic>) {
-          int stock = int.tryParse(value['quantity']?.toString() ??
-                  value['Quantity']?.toString() ??
-                  '0') ??
-              0;
-          if (stock < 10) {
-            lowStockProducts.add({
-              'name': value['name'] ?? 'Unknown Product',
-              'quantity': stock.toString(),
-            });
-            count++;
-          }
-        }
+    final data = event.value;
+    if (data == null || data is! Map<dynamic, dynamic>) {
+      setState(() {
+        lowStockCount = 0;
       });
+      return;
+    }
 
-      if (mounted) {
-        setState(() {
-          lowStockCount = count;
-        });
+    List<Map<String, dynamic>> lowStockProducts = [];
+    int count = 0;
 
-        if (lowStockProducts.isNotEmpty) {
-          _showLowStockNotification(lowStockProducts);
+    (data as Map<dynamic, dynamic>).forEach((key, value) {
+      if (value is Map<dynamic, dynamic>) {
+        int stock = int.tryParse(value['quantity']?.toString() ?? '0') ?? 0;
+
+        if (stock < 10) {
+          lowStockProducts.add({
+            'name': value['name'] ?? 'Unknown Product',
+            'quantity': stock.toString(),
+          });
+          count++;
         }
       }
     });
+
+    if (mounted) {
+      print("Updated low stock count: $count"); // ✅ Debug log
+
+      setState(() {
+        lowStockCount = count;
+      });
+
+      if (lowStockProducts.isNotEmpty) {
+        _showLowStockNotification(lowStockProducts);
+      }
+    }
   }
 
   Future<void> _showLowStockNotification(
@@ -264,7 +264,7 @@ class _MyStoreState extends State<MyStore> {
         ),
         actions: [
           Stack(
-            clipBehavior: Clip.none, // Ensures the badge isn't clipped
+            clipBehavior: Clip.none,
             children: [
               IconButton(
                 onPressed: () {
@@ -286,8 +286,8 @@ class _MyStoreState extends State<MyStore> {
               ),
               if (lowStockCount > 0)
                 Positioned(
-                  right: -2, // Moves badge further right to avoid overlap
-                  top: 6, // Slightly adjusted for better alignment
+                  right: -2,
+                  top: 6,
                   child: Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -301,8 +301,7 @@ class _MyStoreState extends State<MyStore> {
                       maxWidth: 30, // Allows enough space for 3-digit numbers
                     ),
                     child: FittedBox(
-                      fit: BoxFit
-                          .scaleDown, // Ensures the text fits within the box
+                      fit: BoxFit.scaleDown,
                       child: Text(
                         lowStockCount > 999 ? '999+' : '$lowStockCount',
                         style: const TextStyle(

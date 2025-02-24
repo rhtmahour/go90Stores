@@ -140,7 +140,7 @@ class _LowestPurchasePriceReportState extends State<LowestPurchasePriceReport> {
         centerTitle: true,
         title: const Text(
           'Lowest Purchase Price Report',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         flexibleSpace: Container(
           decoration: BoxDecoration(

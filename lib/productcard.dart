@@ -214,7 +214,7 @@ class ProductCard extends StatelessWidget {
       await databaseRef.update({field: int.tryParse(newValue) ?? newValue});
 
       onUpdate(); // Refresh UI in ProductCard
-      onStockUpdated(); // ✅ Refresh low stock count in MyStore
+      onStockUpdated(); // ✅ Refresh MyStore low stock count dynamically
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Product $field updated successfully!')),

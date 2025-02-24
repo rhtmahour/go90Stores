@@ -130,7 +130,7 @@ class _BestPriceCalulateState extends State<BestPriceCalulate> {
         centerTitle: true,
         title: const Text(
           'Lowest Buy Price',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
