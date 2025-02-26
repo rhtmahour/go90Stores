@@ -43,41 +43,18 @@ class NotificationScreen extends StatelessWidget {
                 ),
               ),
             )
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ListView.builder(
-                itemCount: lowStockProducts.length,
-                itemBuilder: (context, index) {
-                  final product = lowStockProducts[index];
-                  final String productName =
-                      product['name'] ?? "Unknown Product";
-                  final String stockQuantity = product['quantity'] ?? "N/A";
-
-                  return Card(
-                    elevation: 2,
-                    color:
-                        Colors.red.withOpacity(0.1), // Highlight notification
-                    child: ListTile(
-                      leading: const Icon(Icons.warning, color: Colors.red),
-                      title: Text(
-                        productName,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      subtitle: Text(
-                        "⚠️ Low Stock Alert: Only $stockQuantity left!",
-                        style: const TextStyle(
-                          color: Colors.red,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: lowStockProducts.length,
+              itemBuilder: (context, index) {
+                final product = lowStockProducts[index];
+                return ListTile(
+                  leading: const Icon(Icons.warning, color: Colors.red),
+                  title: Text(product['name'] ?? "Unknown Product"),
+                  subtitle:
+                      Text("⚠️ Low Stock Alert: ${product['quantity']} left!"),
+                );
+              },
             ),
     );
   }

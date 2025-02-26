@@ -1,32 +1,38 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:go90stores/adminlogin.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:go90stores/cart_provider.dart';
 import 'package:go90stores/firebase_options.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:provider/provider.dart';
+
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  await signInAnonymously();
-  // Sign in anonymously before accessing the database
+  await _initializeNotifications();
 
   runApp(
-    ChangeNotifierProvider(create: (context) => CartProvider(), child: MyApp()),
+    ChangeNotifierProvider(
+      create: (context) => CartProvider(),
+      child: MyApp(),
+    ),
   );
 }
 
-Future<void> signInAnonymously() async {
-  try {
-    await FirebaseAuth.instance.signInAnonymously();
-    print("Signed in anonymously");
-  } catch (e) {
-    print("Error during anonymous sign-in: $e");
-  }
+Future<void> _initializeNotifications() async {
+  const AndroidInitializationSettings androidSettings =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+
+  final InitializationSettings initSettings =
+      InitializationSettings(android: androidSettings);
+
+  await flutterLocalNotificationsPlugin.initialize(initSettings);
 }
 
 class MyApp extends StatelessWidget {

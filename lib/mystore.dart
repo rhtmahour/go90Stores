@@ -60,49 +60,53 @@ class _MyStoreState extends State<MyStore> {
   int lowStockCount = 0;
   List<Map<String, String>> _products = [];
 
-  void _checkLowStockProducts() async {
+  void _listenForStockUpdates() {
     DatabaseReference storeRef =
         FirebaseDatabase.instance.ref('products/${widget.storeId}');
 
-    final event = await storeRef.get();
-    if (!mounted) return;
+    storeRef.onValue.listen((event) {
+      if (!mounted) return;
 
-    final data = event.value;
-    if (data == null || data is! Map<dynamic, dynamic>) {
-      setState(() {
-        lowStockCount = 0;
+      final data = event.snapshot.value;
+      if (data == null || data is! Map<dynamic, dynamic>) {
+        setState(() {
+          lowStockCount = 0;
+          _products = []; // ✅ Fix: Reset products list when data is null
+        });
+        return;
+      }
+
+      List<Map<String, String>> lowStockProducts =
+          []; // ✅ Fix: Explicitly use <String, String>
+      int count = 0;
+
+      (data as Map<dynamic, dynamic>).forEach((key, value) {
+        if (value is Map<dynamic, dynamic>) {
+          int stock = int.tryParse(value['quantity']?.toString() ?? '0') ??
+              0; // ✅ Always use lowercase "quantity"
+
+          if (stock < 10) {
+            lowStockProducts.add({
+              'name': value['name']?.toString() ?? 'Unknown Product',
+              'quantity': stock.toString(), // ✅ Convert quantity to String
+            });
+            count++;
+          }
+        }
       });
-      return;
-    }
 
-    List<Map<String, dynamic>> lowStockProducts = [];
-    int count = 0;
+      if (mounted) {
+        setState(() {
+          lowStockCount = count;
+          _products =
+              lowStockProducts; // ✅ Fix: Now matches List<Map<String, String>>
+        });
 
-    (data as Map<dynamic, dynamic>).forEach((key, value) {
-      if (value is Map<dynamic, dynamic>) {
-        int stock = int.tryParse(value['quantity']?.toString() ?? '0') ?? 0;
-
-        if (stock < 10) {
-          lowStockProducts.add({
-            'name': value['name'] ?? 'Unknown Product',
-            'quantity': stock.toString(),
-          });
-          count++;
+        if (lowStockProducts.isNotEmpty) {
+          _showLowStockNotification(lowStockProducts);
         }
       }
     });
-
-    if (mounted) {
-      print("Updated low stock count: $count"); // ✅ Debug log
-
-      setState(() {
-        lowStockCount = count;
-      });
-
-      if (lowStockProducts.isNotEmpty) {
-        _showLowStockNotification(lowStockProducts);
-      }
-    }
   }
 
   Future<void> _showLowStockNotification(
@@ -117,16 +121,18 @@ class _MyStoreState extends State<MyStore> {
         'Low Stock Alerts',
         importance: Importance.max,
         priority: Priority.high,
-        showWhen: true,
+        playSound: true,
+        enableVibration: true,
       );
 
       const NotificationDetails notificationDetails =
           NotificationDetails(android: androidDetails);
 
       await flutterLocalNotificationsPlugin.show(
-        0,
+        DateTime.now().millisecondsSinceEpoch ~/
+            1000, // ✅ Unique ID for each notification
         'Low Stock Alert',
-        '$productName is low on stock! Only $stockQuantity left.',
+        '$productName is running low! Only $stockQuantity left.',
         notificationDetails,
       );
     }
@@ -240,7 +246,7 @@ class _MyStoreState extends State<MyStore> {
   @override
   void initState() {
     super.initState();
-    _checkLowStockProducts();
+    _listenForStockUpdates(); // ✅ Fix: Start listening for stock updates on init
   }
 
   @override
@@ -268,48 +274,40 @@ class _MyStoreState extends State<MyStore> {
             children: [
               IconButton(
                 onPressed: () {
-                  List<Map<String, dynamic>> lowStockProducts =
-                      _products.where((product) {
-                    int stock = int.tryParse(product['quantity'] ?? '0') ?? 0;
-                    return stock > 0 && stock < 10;
-                  }).toList();
-
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => NotificationScreen(
-                          lowStockProducts: lowStockProducts),
+                      builder: (context) =>
+                          NotificationScreen(lowStockProducts: _products),
                     ),
                   );
                 },
-                icon: const Icon(Icons.notifications, color: Colors.white),
+                icon: const Icon(Icons.notifications,
+                    color: Colors.white, size: 30),
               ),
               if (lowStockCount > 0)
                 Positioned(
-                  right: -2,
+                  right: 4,
                   top: 6,
                   child: Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: Colors.red,
-                      borderRadius: BorderRadius.circular(12),
+                      shape: BoxShape.circle,
                     ),
-                    constraints: BoxConstraints(
+                    constraints: const BoxConstraints(
                       minWidth: 18,
                       minHeight: 18,
-                      maxWidth: 30, // Allows enough space for 3-digit numbers
                     ),
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
+                    child: Center(
                       child: Text(
-                        lowStockCount > 999 ? '999+' : '$lowStockCount',
+                        lowStockCount.toString(),
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 10,
+                          fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),
-                        textAlign: TextAlign.center,
                       ),
                     ),
                   ),
@@ -351,31 +349,35 @@ class _MyStoreState extends State<MyStore> {
   }
 
   Widget _buildButtonsRow() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
       children: [
-        Expanded(
-          child: _buildButton(
-            text: "Upload CSV",
-            icon: Icons.upload_file,
-            onPressed: _isLoading ? null : _uploadCsvFile,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _buildButton(
-            text: "Best Price",
-            icon: Icons.monetization_on,
-            onPressed: _isLoading
-                ? null
-                : () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const BestPriceCalulate()),
-                    );
-                  },
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: _buildButton(
+                text: "Upload CSV",
+                icon: Icons.upload_file,
+                onPressed: _isLoading ? null : _uploadCsvFile,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildButton(
+                text: "Best Price",
+                icon: Icons.monetization_on,
+                onPressed: _isLoading
+                    ? null
+                    : () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const BestPriceCalulate()),
+                        );
+                      },
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -399,7 +401,7 @@ class _MyStoreState extends State<MyStore> {
               'name': value['name']?.toString() ?? '',
               'salePrice': value['salePrice']?.toString() ?? '',
               'purchasePrice': value['purchasePrice']?.toString() ?? '',
-              'quantity': value['Quantity']?.toString() ??
+              'quantity': value['quantity']?.toString() ??
                   value['quantity']?.toString() ??
                   'N/A',
               // ✅ Fix: Ensure 'Quantity' matches the saved field
@@ -415,7 +417,7 @@ class _MyStoreState extends State<MyStore> {
                 product: products[index],
                 onUpdate: () {}, // Keep as is
                 onStockUpdated:
-                    _checkLowStockProducts, // ✅ Pass function to update stock count
+                    _listenForStockUpdates, // ✅ Fix: Use the correct function
                 storeId: widget.storeId,
               );
             },

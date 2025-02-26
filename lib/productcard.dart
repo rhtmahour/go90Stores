@@ -211,10 +211,14 @@ class ProductCard extends StatelessWidget {
     final databaseRef = FirebaseDatabase.instance.ref('products/$storeId/$key');
 
     try {
+      if (field.toLowerCase() == 'quantity') {
+        field = 'quantity'; // ✅ Fix: Always use lowercase "quantity"
+      }
+
       await databaseRef.update({field: int.tryParse(newValue) ?? newValue});
 
-      onUpdate(); // Refresh UI in ProductCard
-      onStockUpdated(); // ✅ Refresh MyStore low stock count dynamically
+      onUpdate(); // Refresh UI
+      onStockUpdated(); // ✅ Notify MyStore dynamically about stock change
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Product $field updated successfully!')),
