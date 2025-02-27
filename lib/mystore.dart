@@ -11,6 +11,8 @@ import 'package:go90stores/notificationscreen.dart';
 import 'package:go90stores/productcard.dart';
 import 'package:go90stores/storedrawerheader.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 
 class MyStore extends StatefulWidget {
   final String storeId;
@@ -111,11 +113,46 @@ class _MyStoreState extends State<MyStore> {
 
   Future<void> _showLowStockNotification(
       List<Map<String, dynamic>> lowStockProducts) async {
+    final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+        FlutterLocalNotificationsPlugin();
+
     for (var product in lowStockProducts) {
       final String productName = product['name'] ?? 'Unknown Product';
       final String stockQuantity = product['quantity'] ?? 'N/A';
+      final String imageUrl = product['image'] ?? ''; // ✅ Fetch product image
 
-      const AndroidNotificationDetails androidDetails =
+      String? imagePath;
+
+      // ✅ Download image and save locally if a valid URL exists
+      if (imageUrl.isNotEmpty) {
+        try {
+          final response = await http.get(Uri.parse(imageUrl));
+          if (response.statusCode == 200) {
+            final directory = await getApplicationDocumentsDirectory();
+            final filePath = '${directory.path}/product_image.jpg';
+            final file = File(filePath);
+            await file.writeAsBytes(response.bodyBytes);
+            imagePath = filePath;
+          }
+        } catch (e) {
+          print("Error downloading image: $e");
+        }
+      }
+
+      // ✅ Android Big Picture Style for notifications
+      final BigPictureStyleInformation bigPictureStyle =
+          BigPictureStyleInformation(
+        imagePath != null
+            ? FilePathAndroidBitmap(imagePath) // ✅ Display downloaded image
+            : const DrawableResourceAndroidBitmap('app_icon'), // Fallback
+        largeIcon: imagePath != null
+            ? FilePathAndroidBitmap(imagePath) // ✅ Large icon with image
+            : const DrawableResourceAndroidBitmap('app_icon'),
+        contentTitle: "Low Stock Alert: $productName",
+        summaryText: "Only $stockQuantity left!",
+      );
+
+      final AndroidNotificationDetails androidDetails =
           AndroidNotificationDetails(
         'low_stock_channel',
         'Low Stock Alerts',
@@ -123,14 +160,14 @@ class _MyStoreState extends State<MyStore> {
         priority: Priority.high,
         playSound: true,
         enableVibration: true,
+        styleInformation: bigPictureStyle, // ✅ Attach Big Picture Style
       );
 
-      const NotificationDetails notificationDetails =
+      final NotificationDetails notificationDetails =
           NotificationDetails(android: androidDetails);
 
       await flutterLocalNotificationsPlugin.show(
-        DateTime.now().millisecondsSinceEpoch ~/
-            1000, // ✅ Unique ID for each notification
+        DateTime.now().millisecondsSinceEpoch ~/ 1000,
         'Low Stock Alert',
         '$productName is running low! Only $stockQuantity left.',
         notificationDetails,
@@ -287,7 +324,7 @@ class _MyStoreState extends State<MyStore> {
               ),
               if (lowStockCount > 0)
                 Positioned(
-                  right: 4,
+                  right: -7,
                   top: 6,
                   child: Container(
                     padding:
