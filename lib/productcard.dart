@@ -163,6 +163,10 @@ class ProductCard extends StatelessWidget {
                       value: 'Edit stock',
                       child: Text('Update Stock'),
                     ),
+                    const PopupMenuItem(
+                      value: 'Edit expiry date',
+                      child: Text('Update Expiry Date'),
+                    ),
                   ],
                 ),
               ],

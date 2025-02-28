@@ -262,6 +262,7 @@ class _MyStoreState extends State<MyStore> {
             : '0', // ✅ Fix: Store as lowercase
         'description': row.length > 6 ? row[6]?.toString() ?? '' : '',
         'productImage': row.length > 7 ? row[7]?.toString().trim() ?? '' : '',
+        'expiryDate': row.length > 8 ? row[8]?.toString().trim() ?? '' : '',
       };
 
       final newProductRef = storeRef.push();
@@ -444,6 +445,7 @@ class _MyStoreState extends State<MyStore> {
               // ✅ Fix: Ensure 'Quantity' matches the saved field
               'description': value['description']?.toString() ?? '',
               'productImage': value['productImage']?.toString() ?? '',
+              'expiryDate': value['expiryDate']?.toString() ?? '',
             });
           });
 
