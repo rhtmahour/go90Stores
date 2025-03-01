@@ -1,6 +1,7 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:intl/intl.dart';
 
 class ProductCard extends StatelessWidget {
   final Map<String, dynamic> product;
@@ -31,6 +32,13 @@ class ProductCard extends StatelessWidget {
     String quantity = product['Quantity']?.toString() ??
         product['quantity']?.toString() ??
         'N/A';
+    String expiryDate = product['expiryDate']?.toString() ??
+        product['expiryDate']?.toString() ??
+        'N/A';
+    String expiryDateString = product['expiryDate']?.toString() ?? 'N/A';
+
+    // ✅ Calculate days remaining
+    int daysRemaining = _calculateDaysRemaining(expiryDateString);
 
     return Card(
       elevation: 4,
@@ -120,6 +128,20 @@ class ProductCard extends StatelessWidget {
                           ),
                         ],
                       ),
+                      Text("Expiry Date: $expiryDate",
+                          style: const TextStyle(fontSize: 14)),
+                      const SizedBox(height: 8),
+                      // ✅ Display Days Remaining
+                      Text(
+                        daysRemaining >= 0
+                            ? "Days Remaining: $daysRemaining"
+                            : "Expired (${-daysRemaining} days ago)",
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: daysRemaining >= 0 ? Colors.green : Colors.red,
+                        ),
+                      ),
                       Text(
                         "Description: $shortDescription",
                         style: const TextStyle(fontSize: 14),
@@ -147,6 +169,12 @@ class ProductCard extends StatelessWidget {
                         _updateProductField(
                             context, product['key'], 'Quantity', newValue);
                       });
+                    } else if (value == 'Edit expiryDate') {
+                      // ✅ Fix: correctly handle expiry date updates
+                      _showDatePickerDialog(context, expiryDate, (newDate) {
+                        _updateProductField(
+                            context, product['key'], 'expiryDate', newDate);
+                      });
                     }
                   },
                   itemBuilder: (context) => [
@@ -164,7 +192,8 @@ class ProductCard extends StatelessWidget {
                       child: Text('Update Stock'),
                     ),
                     const PopupMenuItem(
-                      value: 'Edit expiry date',
+                      value:
+                          'Edit expiryDate', // ✅ Fixed: Matches the `onSelected` check
                       child: Text('Update Expiry Date'),
                     ),
                   ],
@@ -232,5 +261,36 @@ class ProductCard extends StatelessWidget {
         SnackBar(content: Text('Error updating product: $e')),
       );
     }
+  }
+}
+
+void _showDatePickerDialog(BuildContext context, String currentValue,
+    Function(String) onSubmit) async {
+  DateTime initialDate = DateTime.tryParse(currentValue) ?? DateTime.now();
+
+  DateTime? pickedDate = await showDatePicker(
+    context: context,
+    initialDate: initialDate,
+    firstDate: DateTime(2020),
+    lastDate: DateTime(2035),
+  );
+
+  if (pickedDate != null) {
+    String formattedDate =
+        DateFormat('dd/MM/yyyy').format(pickedDate); // ✅ Correct format
+    onSubmit(formattedDate);
+  }
+}
+
+/// ✅ Function to calculate days remaining from expiry date
+int _calculateDaysRemaining(String expiryDate) {
+  try {
+    // ✅ Convert expiryDate String to DateTime (Format: dd/MM/yyyy)
+    DateTime expiry = DateFormat('dd/MM/yyyy').parse(expiryDate);
+    DateTime today = DateTime.now();
+
+    return expiry.difference(today).inDays; // ✅ Days remaining
+  } catch (e) {
+    return 0; // If error occurs (invalid date format), assume 0 days remaining
   }
 }
