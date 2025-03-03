@@ -134,7 +134,7 @@ class ProductCard extends StatelessWidget {
                       // ✅ Display Days Remaining
                       Text(
                         daysRemaining >= 0
-                            ? "Days Remaining: $daysRemaining"
+                            ? "Days Remaining To Expire: $daysRemaining"
                             : "Expired (${-daysRemaining} days ago)",
                         style: TextStyle(
                           fontSize: 14,

@@ -92,7 +92,7 @@ class _MyStoreState extends State<MyStore> {
               'name': value['name']?.toString() ?? 'Unknown Product',
               'quantity': stock.toString(), // ✅ Convert quantity to String
             });
-            count++;
+            count++; //low stock count of the count of products
           }
         }
       });
@@ -315,41 +315,54 @@ class _MyStoreState extends State<MyStore> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          NotificationScreen(lowStockProducts: _products),
+                      builder: (context) => NotificationScreen(
+                        lowStockProducts: _products,
+                        onNotificationDeleted: (int deletedCount) {
+                          setState(() {
+                            lowStockCount -= deletedCount;
+                            if (lowStockCount < 0)
+                              lowStockCount = 0; // Ensure no negative count
+                          });
+                        },
+                      ),
                     ),
                   );
                 },
-                icon: const Icon(Icons.notifications,
-                    color: Colors.white, size: 30),
-              ),
-              if (lowStockCount > 0)
-                Positioned(
-                  right: -7,
-                  top: 6,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                    constraints: const BoxConstraints(
-                      minWidth: 18,
-                      minHeight: 18,
-                    ),
-                    child: Center(
-                      child: Text(
-                        lowStockCount.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                icon: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    const Icon(Icons.notifications,
+                        color: Colors.white, size: 28),
+                    if (lowStockCount > 0)
+                      Positioned(
+                        right: -15,
+                        top: -10,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 18,
+                            minHeight: 18,
+                          ),
+                          child: Center(
+                            child: Text(
+                              lowStockCount.toString(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
+                  ],
                 ),
+              ),
             ],
           ),
           IconButton(
