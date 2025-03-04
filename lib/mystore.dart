@@ -20,10 +20,10 @@ class MyStore extends StatefulWidget {
   const MyStore({Key? key, required this.storeId}) : super(key: key);
 
   @override
-  State<MyStore> createState() => _MyStoreState();
+  State<MyStore> createState() => MyStoreState();
 }
 
-class _MyStoreState extends State<MyStore> {
+class MyStoreState extends State<MyStore> {
   Future<void> _signOut(BuildContext context) async {
     final bool? confirmLogout = await showDialog<bool>(
       context: context,
@@ -73,41 +73,63 @@ class _MyStoreState extends State<MyStore> {
       if (data == null || data is! Map<dynamic, dynamic>) {
         setState(() {
           lowStockCount = 0;
-          _products = []; // ✅ Fix: Reset products list when data is null
+          _products = [];
         });
         return;
       }
 
-      List<Map<String, String>> lowStockProducts =
-          []; // ✅ Fix: Explicitly use <String, String>
-      int count = 0;
+      List<Map<String, String>> lowStockProducts = [];
+      int newLowStockCount = 0;
 
       (data as Map<dynamic, dynamic>).forEach((key, value) {
         if (value is Map<dynamic, dynamic>) {
-          int stock = int.tryParse(value['quantity']?.toString() ?? '0') ??
-              0; // ✅ Always use lowercase "quantity"
+          int stock = int.tryParse(value['quantity']?.toString() ?? '0') ?? 0;
+          int alertLevel =
+              int.tryParse(value['stockAlertLevel']?.toString() ?? '0') ?? 0;
 
-          if (stock < 10) {
+          if (stock < alertLevel) {
             lowStockProducts.add({
+              'key': key,
               'name': value['name']?.toString() ?? 'Unknown Product',
-              'quantity': stock.toString(), // ✅ Convert quantity to String
+              'quantity': stock.toString(),
             });
-            count++; //low stock count of the count of products
+            newLowStockCount++;
           }
         }
       });
 
       if (mounted) {
         setState(() {
-          lowStockCount = count;
-          _products =
-              lowStockProducts; // ✅ Fix: Now matches List<Map<String, String>>
+          lowStockCount = newLowStockCount;
+          _products = lowStockProducts;
         });
 
         if (lowStockProducts.isNotEmpty) {
           _showLowStockNotification(lowStockProducts);
         }
       }
+    });
+  }
+
+  void updateBadgeCount(String productKey, int newStock) {
+    setState(() {
+      // Find the product to get the stock alert level
+      var product = _products.firstWhere((p) => p['key'] == productKey,
+          orElse: () => {'stockAlertLevel': '0'});
+
+      int alertLevel = int.tryParse(product['stockAlertLevel'] ?? '0') ?? 0;
+
+      // ✅ If stock is now above alert level, remove from badge
+      if (newStock >= alertLevel) {
+        _products.removeWhere((product) => product['key'] == productKey);
+      }
+      // ✅ If stock is below alert level, ensure it is in the list
+      else if (newStock < alertLevel &&
+          !_products.any((p) => p['key'] == productKey)) {
+        _products.add({'key': productKey, 'quantity': newStock.toString()});
+      }
+
+      lowStockCount = _products.length; // ✅ Keep badge count in sync
     });
   }
 
@@ -319,9 +341,8 @@ class _MyStoreState extends State<MyStore> {
                         lowStockProducts: _products,
                         onNotificationDeleted: (int deletedCount) {
                           setState(() {
-                            lowStockCount -= deletedCount;
-                            if (lowStockCount < 0)
-                              lowStockCount = 0; // Ensure no negative count
+                            lowStockCount =
+                                0; // ✅ Reset badge count when notifications are cleared
                           });
                         },
                       ),
@@ -335,7 +356,7 @@ class _MyStoreState extends State<MyStore> {
                         color: Colors.white, size: 28),
                     if (lowStockCount > 0)
                       Positioned(
-                        right: -15,
+                        right: -10,
                         top: -10,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
@@ -352,10 +373,9 @@ class _MyStoreState extends State<MyStore> {
                             child: Text(
                               lowStockCount.toString(),
                               style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold),
                             ),
                           ),
                         ),

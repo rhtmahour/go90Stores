@@ -23,13 +23,14 @@ class _NotificationScreenState extends State<NotificationScreen> {
     _notifications = List.from(widget.lowStockProducts);
   }
 
-  void _deleteNotification(int index) {
+  /// ✅ Function to Clear All Notifications
+  void _clearAllNotifications() {
     setState(() {
-      _notifications.removeAt(index);
+      _notifications.clear();
     });
 
-    // Call the function in MyStore to update badge count
-    widget.onNotificationDeleted(1); // Decrease badge count by 1
+    // Notify MyStore to reset the badge count
+    widget.onNotificationDeleted(_notifications.length);
   }
 
   @override
@@ -40,8 +41,28 @@ class _NotificationScreenState extends State<NotificationScreen> {
         centerTitle: true,
         title: const Text(
           "Notifications",
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blueAccent, Colors.purpleAccent],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        actions: [
+          if (_notifications.isNotEmpty)
+            TextButton(
+              onPressed: _clearAllNotifications,
+              child: const Text(
+                "Clear All",
+                style:
+                    TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            ),
+        ],
       ),
       body: _notifications.isEmpty
           ? Center(
@@ -110,24 +131,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                     subtitle: Text(
                       "⚠️ Only ${product['quantity']} left in inventory!",
                       style: const TextStyle(
-                        color: Colors.redAccent,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    trailing: PopupMenuButton<String>(
-                      icon: const Icon(Icons.more_vert, color: Colors.grey),
-                      onSelected: (value) {
-                        if (value == "delete") {
-                          _deleteNotification(index);
-                        }
-                      },
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(
-                          height: 20,
-                          value: "delete",
-                          child: Text("Delete"),
-                        ),
-                      ],
+                          color: Colors.redAccent, fontWeight: FontWeight.w500),
                     ),
                   ),
                 );
