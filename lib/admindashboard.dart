@@ -1,49 +1,103 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go90stores/adminlogin.dart';
+import 'package:go90stores/adminnotificationscreen.dart';
 import 'package:go90stores/lowestpurchasepricereport.dart';
 import 'package:go90stores/storedetailpage.dart';
 
-class AdminDashboard extends StatelessWidget {
-  const AdminDashboard({super.key});
+class AdminDashboard extends StatefulWidget {
+  final String storeId;
+
+  const AdminDashboard({super.key, required this.storeId});
+
+  @override
+  State<AdminDashboard> createState() => _AdminDashboardState();
+}
+
+class _AdminDashboardState extends State<AdminDashboard> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  int lowStockCount = 0;
+  List<Map<String, dynamic>> lowStockProducts = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _listenForStockUpdates(); // ✅ Fix: Listen to ALL store stock updates
+  }
+
+  /// 🔥 Listen for Low Stock Updates from ALL Stores in Firebase RTDB
+  void _listenForStockUpdates() {
+    DatabaseReference storesRef = FirebaseDatabase.instance.ref('products');
+
+    storesRef.onValue.listen((event) {
+      if (!mounted) return;
+
+      final data = event.snapshot.value as Map<dynamic, dynamic>?;
+
+      if (data == null) {
+        setState(() {
+          lowStockProducts = [];
+          lowStockCount = 0;
+        });
+        return;
+      }
+
+      List<Map<String, dynamic>> allLowStockProducts = [];
+      int newLowStockCount = 0;
+
+      data.forEach((storeId, storeProducts) {
+        if (storeProducts is Map<dynamic, dynamic>) {
+          storeProducts.forEach((productId, productData) {
+            int stock =
+                int.tryParse(productData['quantity']?.toString() ?? '0') ?? 0;
+            int alertLevel = int.tryParse(
+                    productData['stockAlertLevel']?.toString() ?? '0') ??
+                0;
+
+            if (stock < alertLevel) {
+              allLowStockProducts.add({
+                'storeName': storeId, // ✅ Store ID acts as store name
+                'name': productData['name'] ?? 'Unknown Product',
+                'quantity': stock.toString(),
+              });
+              newLowStockCount++;
+            }
+          });
+        }
+      });
+
+      if (mounted) {
+        setState(() {
+          lowStockProducts = allLowStockProducts;
+          lowStockCount = newLowStockCount;
+        });
+      }
+    });
+  }
 
   void _showLogoutConfirmation(BuildContext context) {
-    showDialog<dynamic>(
+    showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (context) {
         return AlertDialog(
-          title: const Text(
-            "Logout",
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
+          title: const Text("Logout"),
           content: const Text("Do you want to logout?"),
-          actions: <Widget>[
+          actions: [
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+              onPressed: () => Navigator.of(context).pop(),
               child: const Text("No"),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
               onPressed: () async {
-                try {
-                  await FirebaseAuth.instance.signOut();
-                  Navigator.pushAndRemoveUntil<dynamic>(
-                    context,
-                    MaterialPageRoute<dynamic>(
-                        builder: (context) => const AdminLogin()),
-                    (Route<dynamic> route) => false,
-                  );
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text("Error logging out: $e"),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
+                await _auth.signOut();
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AdminLogin()),
+                  (route) => false,
+                );
               },
               child: const Text("Yes"),
             ),
@@ -62,10 +116,10 @@ class AdminDashboard extends StatelessWidget {
         centerTitle: true,
         title: const Text(
           'Admin Dashboard',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         flexibleSpace: Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: <Color>[Colors.blue, Colors.purple],
               begin: Alignment.topLeft,
@@ -73,7 +127,54 @@ class AdminDashboard extends StatelessWidget {
             ),
           ),
         ),
-        actions: <Widget>[
+        actions: [
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              IconButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Adminnotificationscreen(
+                        lowStockProducts: lowStockProducts,
+                        onNotificationDeleted: (deletedCount) {
+                          setState(() {
+                            lowStockCount = 0;
+                          });
+                        },
+                      ),
+                    ),
+                  );
+                },
+                icon: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    const Icon(Icons.notifications,
+                        color: Colors.white, size: 28),
+                    if (lowStockCount > 0)
+                      Positioned(
+                        right: -7,
+                        top: -10,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            lowStockCount.toString(),
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 12),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
           TextButton(
             onPressed: () => _showLogoutConfirmation(context),
             child: const Text(

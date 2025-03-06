@@ -51,7 +51,10 @@ class _AdminLoginState extends State<AdminLogin> {
 
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const AdminDashboard()),
+          MaterialPageRoute(
+              builder: (context) => const AdminDashboard(
+                    storeId: '',
+                  )),
         );
       } else if (_selectedRole == 'Store') {
         // ✅ Store Login

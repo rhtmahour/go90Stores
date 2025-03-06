@@ -108,7 +108,6 @@ class ProductCard extends StatelessWidget {
                         "Sale Price: ₹$salePrice\n",
                         style: const TextStyle(fontSize: 16),
                       ),
-                      const SizedBox(height: 8),
                       Row(
                         children: [
                           const Icon(Icons.inventory,
