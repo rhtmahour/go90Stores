@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Adminnotificationscreen extends StatefulWidget {
   final List<Map<String, dynamic>> lowStockProducts;
@@ -16,11 +17,40 @@ class Adminnotificationscreen extends StatefulWidget {
 
 class _NotificationScreenState extends State<Adminnotificationscreen> {
   late List<Map<String, dynamic>> _notifications;
+  final Map<String, String> _storeNames = {}; // Cache store names
 
   @override
   void initState() {
     super.initState();
     _notifications = List.from(widget.lowStockProducts);
+    _fetchStoreNames();
+  }
+
+  /// ✅ Fetch Store Names from Firestore
+  Future<void> _fetchStoreNames() async {
+    for (var product in _notifications) {
+      String storeId =
+          product['storeName']; // `storeName` actually contains `storeId`
+
+      if (!_storeNames.containsKey(storeId)) {
+        try {
+          DocumentSnapshot storeSnapshot = await FirebaseFirestore.instance
+              .collection('stores')
+              .doc(storeId)
+              .get();
+
+          if (storeSnapshot.exists) {
+            String storeName =
+                storeSnapshot.get('storename') ?? 'Unknown Store';
+            setState(() {
+              _storeNames[storeId] = storeName; // Store name mapping
+            });
+          }
+        } catch (e) {
+          print("Error fetching store name: $e");
+        }
+      }
+    }
   }
 
   /// ✅ Function to Clear All Notifications
@@ -83,6 +113,8 @@ class _NotificationScreenState extends State<Adminnotificationscreen> {
               itemCount: _notifications.length,
               itemBuilder: (context, index) {
                 final product = _notifications[index];
+                final storeId = product['storeName']; // storeId
+                final storeName = _storeNames[storeId] ?? 'Fetching...';
 
                 return Container(
                   margin: const EdgeInsets.symmetric(vertical: 6),
@@ -115,23 +147,22 @@ class _NotificationScreenState extends State<Adminnotificationscreen> {
                           : const Icon(Icons.inventory_2,
                               color: Colors.blue, size: 50),
                     ),
-                    title: RichText(
-                      text: TextSpan(
-                        style:
-                            const TextStyle(color: Colors.black, fontSize: 14),
-                        children: [
-                          TextSpan(
-                            text: "${product['name']} ",
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          const TextSpan(text: "is running low on stock."),
-                        ],
-                      ),
+                    title: Text(
+                      storeName,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 16),
                     ),
                     subtitle: Text(
-                      "⚠️ Only ${product['quantity']} left in inventory!",
+                      product['name'] ?? 'Unknown Product',
+                      style:
+                          const TextStyle(color: Colors.black87, fontSize: 14),
+                    ),
+                    trailing: Text(
+                      "Only ${product['quantity']} left in inventory!",
                       style: const TextStyle(
-                          color: Colors.redAccent, fontWeight: FontWeight.w500),
+                          color: Colors.redAccent,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14),
                     ),
                   ),
                 );
