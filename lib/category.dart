@@ -16,7 +16,7 @@ class Category extends StatelessWidget {
       {"image": "assets/images/vegetables.png", "label": "Vegetables"},
       {"image": "assets/images/meat1.png", "label": "Meat"},
       {"image": "assets/images/dairy_products.png", "label": "Dairy"},
-      {"image": "assets/images/cold_drink1.png", "label": "Cold Drinks"},
+      {"image": "assets/images/cold_drink1.png", "label": "Drinks"},
       {"image": "assets/images/bakery.png", "label": "Bakery"},
       {"image": "assets/images/coffee.png", "label": "Coffee"},
       {"image": "assets/images/instant-food.png", "label": "Instant Food"},
