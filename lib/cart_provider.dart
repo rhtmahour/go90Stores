@@ -15,7 +15,7 @@ class CartProvider with ChangeNotifier {
   // Get total price of cart items
   double getTotalPrice() {
     return _cartItems.fold(0.0, (sum, item) {
-      double price = double.tryParse(item['price'].toString()) ?? 0.0;
+      double price = double.tryParse(item['salePrice'].toString()) ?? 0.0;
       return sum + (price * (item['quantity'] as int));
     });
   }

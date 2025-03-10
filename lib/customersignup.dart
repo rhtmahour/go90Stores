@@ -88,7 +88,10 @@ class _CustomerSignUpState extends State<CustomerSignUp> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text('Customer SignUp'),
+        title: const Text(
+          'Customer SignUp',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
