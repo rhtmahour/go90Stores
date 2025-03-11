@@ -60,12 +60,11 @@ class ProceedToCheckout extends StatelessWidget {
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
+        onTap: () {
+          // Add address selection logic here
+        },
         leading: Icon(Icons.location_on, color: Colors.redAccent, size: 28),
         title: Text(
-          "Rohit ",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(
           "123 Main Street, New York, NY 10001",
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
