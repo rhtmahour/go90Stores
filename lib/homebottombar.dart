@@ -1,5 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:go90stores/adminlogin.dart';
+import 'package:go90stores/cartpage.dart';
+import 'package:go90stores/categories.dart';
+import 'package:go90stores/customerdashboard.dart';
 
 class HomeBottomBar extends StatelessWidget {
   const HomeBottomBar({super.key});
@@ -16,7 +20,12 @@ class HomeBottomBar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           InkWell(
-            onTap: () {},
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => Customerdashboard()),
+              );
+            },
             child: const Column(
               children: [
                 Icon(
@@ -35,7 +44,12 @@ class HomeBottomBar extends StatelessWidget {
             ),
           ),
           InkWell(
-            onTap: () {},
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => Categories()),
+              );
+            },
             child: const Column(
               children: [
                 Icon(
@@ -54,7 +68,12 @@ class HomeBottomBar extends StatelessWidget {
             ),
           ),
           InkWell(
-            onTap: () {},
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => CartPage()),
+              );
+            },
             child: const Column(
               children: [
                 Icon(
@@ -73,7 +92,12 @@ class HomeBottomBar extends StatelessWidget {
             ),
           ),
           InkWell(
-            onTap: () {},
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AdminLogin()),
+              );
+            },
             child: const Column(
               children: [
                 Icon(

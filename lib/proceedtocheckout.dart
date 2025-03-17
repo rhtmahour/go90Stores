@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go90stores/services/stripe_service.dart';
 import 'package:provider/provider.dart';
 import 'cart_provider.dart';
 
@@ -147,6 +148,8 @@ class ProceedToCheckout extends StatelessWidget {
   }
 
   Widget _buildCheckoutButton(CartProvider cartProvider) {
+    double totalAmount = cartProvider.getTotalPrice(); // Get total price
+
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(vertical: 12),
@@ -159,10 +162,10 @@ class ProceedToCheckout extends StatelessWidget {
           elevation: 3,
         ),
         onPressed: () {
-          // Perform checkout process here
+          StripeService.instance.makePayment(totalAmount); // Pass amount
         },
         child: Text(
-          "Place Order - ₹${cartProvider.getTotalPrice().toStringAsFixed(2)}",
+          "Place Order - ₹${totalAmount.toStringAsFixed(2)}",
           style: TextStyle(
               fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
         ),

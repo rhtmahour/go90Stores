@@ -6,14 +6,12 @@ import 'package:flutter/services.dart';
 import 'package:go90stores/adminlogin.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go90stores/brandpage.dart';
-import 'package:go90stores/cartpage.dart';
 import 'package:go90stores/category.dart';
 import 'package:go90stores/homebottombar.dart';
 import 'package:go90stores/productsearch.dart';
 import 'package:go90stores/slider1.dart';
 import 'package:go90stores/slider2.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:badges/badges.dart' as badges;
 
 class Customerdashboard extends StatefulWidget {
   const Customerdashboard({super.key});
