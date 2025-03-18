@@ -180,6 +180,7 @@ class _CustomerSignUpState extends State<CustomerSignUp> {
                   : ElevatedButton(
                       onPressed: _signUp,
                       style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purple,
                         padding: const EdgeInsets.symmetric(
                             vertical: 16.0, horizontal: 50.0),
                         shape: RoundedRectangleBorder(
@@ -188,7 +189,7 @@ class _CustomerSignUpState extends State<CustomerSignUp> {
                       ),
                       child: const Text(
                         'Sign Up',
-                        style: TextStyle(fontSize: 18),
+                        style: TextStyle(fontSize: 18, color: Colors.white),
                       ),
                     ),
 

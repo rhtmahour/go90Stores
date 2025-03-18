@@ -385,10 +385,13 @@ class MyStoreState extends State<MyStore> {
               ),
             ],
           ),
-          IconButton(
+          TextButton(
             onPressed: () => _signOut(context),
-            icon: const Icon(Icons.logout, color: Colors.white),
-          ),
+            child: const Text(
+              "Logout",
+              style: TextStyle(color: Colors.white),
+            ),
+          )
         ],
       ),
       drawer: Drawer(

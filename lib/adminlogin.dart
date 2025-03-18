@@ -44,7 +44,7 @@ class _AdminLoginState extends State<AdminLogin> {
     try {
       if (_selectedRole == 'Admin') {
         // ✅ Admin Login
-        UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        UserCredential userCredential1 = await _auth.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
@@ -79,7 +79,7 @@ class _AdminLoginState extends State<AdminLogin> {
         }
       } else if (_selectedRole == 'Customer') {
         // ✅ Customer Login
-        UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        UserCredential userCredential2 = await _auth.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
@@ -214,7 +214,7 @@ class _AdminLoginState extends State<AdminLogin> {
                                 _passwordVisible
                                     ? Icons.visibility
                                     : Icons.visibility_off,
-                                color: Theme.of(context).primaryColorDark,
+                                color: Colors.purple[200],
                               ),
                               onPressed: () {
                                 setState(() {
@@ -233,6 +233,7 @@ class _AdminLoginState extends State<AdminLogin> {
                             : ElevatedButton(
                                 onPressed: _login,
                                 style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.purple,
                                   padding: const EdgeInsets.symmetric(
                                       vertical: 16.0),
                                   shape: RoundedRectangleBorder(
@@ -241,7 +242,8 @@ class _AdminLoginState extends State<AdminLogin> {
                                 ),
                                 child: const Text(
                                   'Login',
-                                  style: TextStyle(fontSize: 16),
+                                  style: TextStyle(
+                                      fontSize: 18, color: Colors.white),
                                 ),
                               ),
                         if (_selectedRole == 'Store')

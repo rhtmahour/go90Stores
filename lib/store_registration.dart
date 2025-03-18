@@ -71,7 +71,10 @@ class _StoreRegistrationState extends State<StoreRegistration> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text('Store Registration'),
+        title: const Text(
+          'Store Registration',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -92,10 +95,6 @@ class _StoreRegistrationState extends State<StoreRegistration> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const Text(
-                    'Upload Store Image',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
                   const SizedBox(height: 10),
                   StoreImagePicker(onImagePicked: _setImage),
                   const SizedBox(height: 20),
@@ -228,6 +227,7 @@ class _StoreRegistrationState extends State<StoreRegistration> {
                   ElevatedButton(
                     onPressed: _registerStore,
                     style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 30,
                         vertical: 12,
@@ -236,7 +236,10 @@ class _StoreRegistrationState extends State<StoreRegistration> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    child: const Text('Register Store'),
+                    child: const Text(
+                      'Register Store',
+                      style: TextStyle(color: Colors.white, fontSize: 18),
+                    ),
                   ),
                 ],
               ),

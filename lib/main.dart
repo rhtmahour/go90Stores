@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
-import 'package:go90stores/adminlogin.dart';
 import 'package:go90stores/consts.dart';
 import 'package:go90stores/startpage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:go90stores/cart_provider.dart';
 import 'package:go90stores/firebase_options.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -16,10 +16,14 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await _setup();
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  await _initializeNotifications();
+
+  if (!kIsWeb) {
+    await _initializeNotifications(); // Notifications are not supported on Web
+  }
 
   runApp(
     ChangeNotifierProvider(
@@ -31,7 +35,10 @@ void main() async {
 
 Future<void> _setup() async {
   WidgetsFlutterBinding.ensureInitialized();
-  Stripe.publishableKey = stripePublishableKey;
+  if (!kIsWeb) {
+    Stripe.publishableKey =
+        stripePublishableKey; // Flutter Stripe not fully supported on Web
+  }
 }
 
 Future<void> _initializeNotifications() async {
@@ -71,7 +78,7 @@ class MyApp extends StatelessWidget {
           displaySmall: GoogleFonts.pacifico(),
         ),
       ),
-      home: OnboardingPage(),
+      home: OnboardingPage(), // Ensuring compatibility
     );
   }
 }
