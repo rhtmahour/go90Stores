@@ -393,47 +393,34 @@ class _AdminDashboardState extends State<AdminDashboard> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Container(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Colors.blue,
-                                        Colors.purple,
-                                      ], // Gradient colors
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
+                                TextButton(
+                                  onPressed: () {
+                                    // Navigate to Lowest Purchase Price Report using MaterialPageRoute
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            LowestPurchasePriceReport(), // Target Page
+                                      ),
+                                    );
+                                  },
+                                  style: TextButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 20,
+                                      horizontal: 24,
                                     ),
-                                    borderRadius: BorderRadius.circular(12),
+                                    backgroundColor: Colors
+                                        .purple, // Transparent to show gradient
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
                                   ),
-                                  child: TextButton(
-                                    onPressed: () {
-                                      // Navigate to Lowest Purchase Price Report using MaterialPageRoute
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              LowestPurchasePriceReport(), // Target Page
-                                        ),
-                                      );
-                                    },
-                                    style: TextButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 20,
-                                        horizontal: 24,
-                                      ),
-                                      backgroundColor: Colors
-                                          .transparent, // Transparent to show gradient
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                    child: const Text(
-                                      'Lowest Purchase Price Report',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                        color: Colors.white,
-                                      ),
+                                  child: const Text(
+                                    'Lowest Purchase Price Report',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                      color: Colors.white,
                                     ),
                                   ),
                                 ),
@@ -456,7 +443,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                   title: "Total Revenue",
                                   value: "\$50,000",
                                   icon: Icons.bar_chart,
-                                  color: Colors.purple,
+                                  color: Colors.red,
                                 ),
                               ],
                             ),
@@ -524,7 +511,7 @@ Widget _buildActivityCard({
 
 Widget _buildSummaryCard(String title, IconData icon, Color color) {
   return Card(
-    color: Colors.purple[400],
+    color: Colors.purple,
     elevation: 4,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     child: Padding(
