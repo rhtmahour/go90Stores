@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go90stores/cart_provider.dart';
 import 'package:go90stores/cartpage.dart';
 import 'package:badges/badges.dart' as badges;
+import 'package:go90stores/productdetailpage.dart';
 import 'package:provider/provider.dart';
 
 class ProductPage extends StatefulWidget {
@@ -143,91 +144,100 @@ class ProductCard extends StatelessWidget {
     String imageUrl = product['productImage']?.trim() ?? '';
     String salePrice = product['salePrice']?.toString() ?? 'N/A';
 
-    return Stack(
-      children: [
-        Card(
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(12)),
-                child: imageUrl.isNotEmpty
-                    ? Image.network(
-                        imageUrl,
-                        height: 100,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(
-                          Icons.image_not_supported,
-                          size: 100,
-                          color: Colors.grey,
+    return GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ProductDetailPage(product: product),
+            ),
+          );
+        },
+        child: Stack(
+          children: [
+            Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ClipRRect(
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(12)),
+                    child: imageUrl.isNotEmpty
+                        ? Image.network(
+                            imageUrl,
+                            height: 100,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(
+                              Icons.image_not_supported,
+                              size: 100,
+                              color: Colors.grey,
+                            ),
+                          )
+                        : const Icon(
+                            Icons.image_not_supported,
+                            size: 100,
+                            color: Colors.grey,
+                          ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          product['name'] ?? 'Unknown Product',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      )
-                    : const Icon(
-                        Icons.image_not_supported,
-                        size: 100,
-                        color: Colors.grey,
-                      ),
+                        const SizedBox(height: 5),
+                        Text(
+                          "₹$salePrice",
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      product['name'] ?? 'Unknown Product',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      "₹$salePrice",
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        // Positioned add button at bottom-right
-        Positioned(
-          bottom: 8,
-          right: 8,
-          child: Consumer<CartProvider>(
-            builder: (context, cartProvider, child) {
-              return FloatingActionButton.small(
-                onPressed: () {
-                  cartProvider.addItemToCart(product);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('${product['name']} added to cart!'),
-                    ),
+            ),
+            // Positioned add button at bottom-right
+            Positioned(
+              bottom: 8,
+              right: 8,
+              child: Consumer<CartProvider>(
+                builder: (context, cartProvider, child) {
+                  return FloatingActionButton.small(
+                    onPressed: () {
+                      cartProvider.addItemToCart(product);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('${product['name']} added to cart!'),
+                        ),
+                      );
+                    },
+                    backgroundColor: Colors.purple,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30)),
+                    child: const Icon(Icons.add, color: Colors.white, size: 20),
                   );
                 },
-                backgroundColor: Colors.purple,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30)),
-                child: const Icon(Icons.add, color: Colors.white, size: 20),
-              );
-            },
-          ),
-        ),
-      ],
-    );
+              ),
+            ),
+          ],
+        ));
   }
 }

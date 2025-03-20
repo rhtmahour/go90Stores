@@ -19,7 +19,7 @@ class Category extends StatelessWidget {
       {"image": "assets/images/cold_drink1.png", "label": "Drinks"},
       {"image": "assets/images/bakery.png", "label": "Bakery"},
       {"image": "assets/images/coffee.png", "label": "Coffee"},
-      {"image": "assets/images/instant-food.png", "label": "Instant Food"},
+      {"image": "assets/images/instant-food.png", "label": "Food"},
     ];
 
     return Column(

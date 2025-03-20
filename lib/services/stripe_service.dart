@@ -18,7 +18,7 @@ class StripeService {
       await Stripe.instance.initPaymentSheet(
         paymentSheetParameters: SetupPaymentSheetParameters(
           paymentIntentClientSecret: paymentIntentClientSecret,
-          merchantDisplayName: "ROHIT AMBARSKYTECH",
+          merchantDisplayName: "Go90Store",
         ),
       );
       await _processPayment();
