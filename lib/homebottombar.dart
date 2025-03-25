@@ -1,12 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:go90stores/adminlogin.dart';
 import 'package:go90stores/cartpage.dart';
 import 'package:go90stores/categories.dart';
 import 'package:go90stores/customerdashboard.dart';
 
 class HomeBottomBar extends StatelessWidget {
-  const HomeBottomBar({super.key});
+  final VoidCallback onAccountTap;
+  const HomeBottomBar({super.key, required this.onAccountTap});
 
   @override
   Widget build(BuildContext context) {
@@ -92,12 +92,7 @@ class HomeBottomBar extends StatelessWidget {
             ),
           ),
           InkWell(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => AdminLogin()),
-              );
-            },
+            onTap: onAccountTap,
             child: const Column(
               children: [
                 Icon(

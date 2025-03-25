@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -29,6 +28,11 @@ class _CustomerdashboardState extends State<Customerdashboard> {
   String? phoneNumber;
   String? email;
   bool _isLoggedIn = false;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  void _openDrawer() {
+    _scaffoldKey.currentState?.openDrawer();
+  }
 
   Future<void> pickImage() async {
     try {
@@ -73,6 +77,7 @@ class _CustomerdashboardState extends State<Customerdashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         centerTitle: true,
         title: const Text(
@@ -107,7 +112,9 @@ class _CustomerdashboardState extends State<Customerdashboard> {
                       padding: const EdgeInsets.only(left: 200, bottom: 30),
                       child: IconButton(
                         icon: Icon(Icons.edit, color: Colors.white),
-                        onPressed: () {},
+                        onPressed: () {
+                          // Add edit profile logic here
+                        },
                       ),
                     ),
                     GestureDetector(
@@ -340,7 +347,7 @@ class _CustomerdashboardState extends State<Customerdashboard> {
           },
         ),
       ),
-      bottomNavigationBar: const HomeBottomBar(),
+      bottomNavigationBar: HomeBottomBar(onAccountTap: _openDrawer),
     );
   }
 }
