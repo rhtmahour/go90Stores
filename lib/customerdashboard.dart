@@ -327,7 +327,8 @@ class _CustomerdashboardState extends State<Customerdashboard> {
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => ProductSearchPage(
-                                      searchQuery: searchQuery),
+                                    searchQuery: searchQuery,
+                                  ),
                                 ),
                               );
                             }

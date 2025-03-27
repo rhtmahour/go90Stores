@@ -12,6 +12,8 @@ class CartProvider with ChangeNotifier {
         0, (sum, item) => sum + (item['quantity'] as int));
   }
 
+  get cartCount => null;
+
   // Get total price of cart items
   double getTotalPrice() {
     return _cartItems.fold(0.0, (sum, item) {
