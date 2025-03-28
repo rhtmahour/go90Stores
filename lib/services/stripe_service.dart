@@ -7,13 +7,13 @@ class StripeService {
 
   static final StripeService instance = StripeService._();
 
-  Future<void> makePayment(double totalAmount) async {
+  Future<bool> makePayment(double totalAmount) async {
     try {
-      int amountInPaisa = (totalAmount * 100).toInt(); // Convert ₹ to paisa
+      int amountInPaisa = (totalAmount * 100).toInt();
       String? paymentIntentClientSecret =
           await _createPaymentIntent(amountInPaisa, "inr");
 
-      if (paymentIntentClientSecret == null) return;
+      if (paymentIntentClientSecret == null) return false;
 
       await Stripe.instance.initPaymentSheet(
         paymentSheetParameters: SetupPaymentSheetParameters(
@@ -21,9 +21,12 @@ class StripeService {
           merchantDisplayName: "Go90Store",
         ),
       );
+
       await _processPayment();
+      return true; // Ensure success returns true
     } catch (e) {
       print("Error in makePayment: $e");
+      return false; // Only return false for actual failures
     }
   }
 
@@ -62,7 +65,8 @@ class StripeService {
       await Stripe.instance.presentPaymentSheet();
       await Stripe.instance.confirmPaymentSheetPayment();
     } catch (e) {
-      print(e);
+      print("Error in _processPayment: $e");
+      throw Exception("Payment process failed");
     }
   }
 

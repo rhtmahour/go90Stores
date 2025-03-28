@@ -307,7 +307,7 @@ class _CustomerdashboardState extends State<Customerdashboard> {
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(
-                                  30), // Add rounded corners
+                                  20), // Add rounded corners
                               borderSide: BorderSide(
                                   color: Colors.purple,
                                   width: 2), // Border color when not focused

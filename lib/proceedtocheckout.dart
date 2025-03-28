@@ -38,7 +38,7 @@ class ProceedToCheckout extends StatelessWidget {
             Spacer(),
             _buildPaymentMethod(),
             Spacer(),
-            _buildCheckoutButton(cartProvider),
+            _buildCheckoutButton(cartProvider, context),
           ],
         ),
       ),
@@ -147,8 +147,8 @@ class ProceedToCheckout extends StatelessWidget {
     );
   }
 
-  Widget _buildCheckoutButton(CartProvider cartProvider) {
-    double totalAmount = cartProvider.getTotalPrice(); // Get total price
+  Widget _buildCheckoutButton(CartProvider cartProvider, BuildContext context) {
+    double totalAmount = cartProvider.getTotalPrice();
 
     return Container(
       width: double.infinity,
@@ -161,8 +161,36 @@ class ProceedToCheckout extends StatelessWidget {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
           elevation: 3,
         ),
-        onPressed: () {
-          StripeService.instance.makePayment(totalAmount); // Pass amount
+        onPressed: () async {
+          try {
+            bool paymentSuccess =
+                await StripeService.instance.makePayment(totalAmount);
+
+            if (paymentSuccess) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text("Order placed successfully!"),
+                  backgroundColor: Colors.green,
+                ),
+              );
+              cartProvider.cartItems.clear();
+              cartProvider.notifyListeners();
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text("Payment failed. Please try again."),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text("An error occurred: $e"),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
         },
         child: Text(
           "Place Order - ₹${totalAmount.toStringAsFixed(2)}",
