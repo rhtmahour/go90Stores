@@ -25,21 +25,21 @@ class ProceedToCheckout extends StatelessWidget {
           ),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionTitle("Shipping Address"),
-            _buildAddressCard(),
-            _buildSectionTitle("Order Summary"),
-            _buildOrderSummary(cartProvider),
-            _buildSectionTitle("Payment Method"),
-            Spacer(),
-            _buildPaymentMethod(),
-            Spacer(),
-            _buildCheckoutButton(cartProvider, context),
-          ],
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionTitle("Shipping Address"),
+              _buildAddressCard(),
+              _buildSectionTitle("Order Summary"),
+              _buildOrderSummary(cartProvider),
+              _buildSectionTitle("Payment Method"),
+              _buildPaymentMethod(),
+              _buildCheckoutButton(cartProvider, context),
+            ],
+          ),
         ),
       ),
     );
@@ -64,9 +64,10 @@ class ProceedToCheckout extends StatelessWidget {
         onTap: () {
           // Add address selection logic here
         },
-        leading: Icon(Icons.location_on, color: Colors.redAccent, size: 28),
+        leading: Icon(Icons.location_on,
+            color: const Color.fromARGB(255, 176, 120, 120), size: 28),
         title: Text(
-          "123 Main Street, New York, NY 10001",
+          "KH No. 91, Bijwasan Road, Kapashera, Gurgaon Road, New Delhi 110037",
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(color: Colors.grey[700]),
@@ -140,6 +141,14 @@ class ProceedToCheckout extends StatelessWidget {
             title: Text("Cash on Delivery"),
             value: "cod",
             groupValue: "card",
+            onChanged: (value) {},
+          ),
+          Divider(),
+          RadioListTile(
+            activeColor: Colors.deepPurple,
+            title: Text("UPI"),
+            value: "upi",
+            groupValue: "payment",
             onChanged: (value) {},
           ),
         ],

@@ -401,10 +401,16 @@ class MyStoreState extends State<MyStore> {
           children: [
             StoreDrawerHeader(storeId: widget.storeId),
             const ListTile(
-              iconColor: Colors.purple,
+              iconColor: Colors.blue,
               textColor: Colors.purple,
-              leading: Icon(Icons.home),
-              title: Text('Home'),
+              leading: Icon(
+                Icons.home,
+                size: 20,
+              ),
+              title: Text(
+                'Home',
+                style: TextStyle(fontSize: 20),
+              ),
             ),
           ],
         ),
