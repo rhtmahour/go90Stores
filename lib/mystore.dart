@@ -24,6 +24,7 @@ class MyStore extends StatefulWidget {
 }
 
 class MyStoreState extends State<MyStore> {
+  final TextEditingController _searchController = TextEditingController();
   Future<void> _signOut(BuildContext context) async {
     final bool? confirmLogout = await showDialog<bool>(
       context: context,
@@ -419,6 +420,73 @@ class MyStoreState extends State<MyStore> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Container(
+                height: 45,
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Center(
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      filled: true, // Adds background color to the search bar
+                      fillColor:
+                          Colors.grey[200], // Set a light background color
+                      contentPadding: EdgeInsets.symmetric(
+                          vertical: 15, horizontal: 20), // Add some padding
+                      labelText: 'Search products by name ...',
+                      labelStyle: TextStyle(
+                          color:
+                              Colors.grey[700]), // Customize label text color
+                      hintText: 'Find the best deals...',
+                      hintStyle: TextStyle(
+                          color: Colors.grey[500],
+                          fontSize: 14), // Set hint text style
+                      prefixIcon: Icon(Icons.search,
+                          color:
+                              Colors.purple), // Customize the search icon color
+                      suffixIcon: IconButton(
+                        icon: Icon(Icons.close,
+                            color: Colors
+                                .red), // Add a clear (close) button to reset search
+                        onPressed: () {
+                          _searchController.clear(); // Clear the search text
+                          FocusScope.of(context)
+                              .unfocus(); // Dismiss the keyboard
+                        },
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius:
+                            BorderRadius.circular(20), // Add rounded corners
+                        borderSide: BorderSide(
+                            color: Colors.purple,
+                            width: 2), // Border color when not focused
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius:
+                            BorderRadius.circular(25), // Rounded corners
+                        borderSide: BorderSide(
+                            color: Colors.blue,
+                            width: 2), // Border color when focused
+                      ),
+                    ),
+                    /*onSubmitted: (searchQuery) {
+                      searchQuery = _searchController.text.trim();
+                      if (searchQuery.isNotEmpty) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ProductSearchPage(
+                              searchQuery: searchQuery,
+                            ),
+                          ),
+                        );
+                      }
+                    },*/
+                  ),
+                ),
+              ),
+            ),
             _buildButtonsRow(),
             const SizedBox(height: 16),
             Expanded(child: _buildProductList()),
