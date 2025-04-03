@@ -117,6 +117,7 @@ flutter:
     - assets/images/loreal.png
     - assets/images/india_gate.png
     - assets/images/catch.png
+    - assets/images/Animation - 1726912166683.json
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

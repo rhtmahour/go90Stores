@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go90stores/proceedtocheckout.dart';
+import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'package:badges/badges.dart' as badges;
 import 'cart_provider.dart';
@@ -8,6 +9,7 @@ class CartPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         centerTitle: true,
         title: Text(
@@ -41,7 +43,7 @@ class CartPage extends StatelessWidget {
       body: Consumer<CartProvider>(
         builder: (context, cartProvider, child) {
           return cartProvider.cartItems.isEmpty
-              ? _buildEmptyCart()
+              ? _buildEmptyCart(context)
               : _buildCartList(context, cartProvider);
         },
       ),
@@ -52,12 +54,23 @@ class CartPage extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyCart() {
+  Widget _buildEmptyCart(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.remove_shopping_cart, size: 100, color: Colors.grey[400]),
+          Container(
+            height: MediaQuery.of(context).size.height / 3,
+            child: Lottie.asset(
+              'assets/images/Animation - 1726912166683.json',
+              // Fallback if loading fails
+              errorBuilder: (context, error, stackTrace) => Icon(
+                Icons.error_outline,
+                size: 60,
+                color: Colors.red,
+              ),
+            ),
+          ),
           SizedBox(height: 16),
           Text(
             'Your cart is empty 😌',
