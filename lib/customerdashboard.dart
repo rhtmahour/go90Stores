@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go90stores/brandpage.dart';
 import 'package:go90stores/category.dart';
 import 'package:go90stores/homebottombar.dart';
+import 'package:go90stores/orderpage.dart';
 import 'package:go90stores/productsearch.dart';
 import 'package:go90stores/slider1.dart';
 import 'package:go90stores/slider2.dart';
@@ -162,7 +163,14 @@ class _CustomerdashboardState extends State<Customerdashboard> {
                 'Orders',
                 style: TextStyle(fontWeight: FontWeight.w500),
               ),
-              onTap: () {},
+              onTap: () {
+                // Add your onTap logic here
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const Orderpage(),
+                    ));
+              },
             ),
             Divider(),
             ListTile(
