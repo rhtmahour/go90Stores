@@ -6,7 +6,7 @@ class CartProvider with ChangeNotifier {
   // Get cart items
   List<Map<String, dynamic>> get cartItems => _cartItems;
 
-  // Get total quantity in cart (Fixed Type Issue)
+  // Get total quantity in cart
   int get counter {
     return _cartItems.fold<int>(
         0, (sum, item) => sum + (item['quantity'] as int));
@@ -32,8 +32,8 @@ class CartProvider with ChangeNotifier {
       _cartItems.add({
         'key': product['key'],
         'name': product['name'],
-        'salePrice': product['salePrice'], // ✅ Ensure salePrice is stored
-        'productImage': product['productImage'], // ✅ Ensure image is stored
+        'salePrice': product['salePrice'],
+        'productImage': product['productImage'],
         'quantity': 1,
       });
     }
@@ -58,8 +58,14 @@ class CartProvider with ChangeNotifier {
     if (_cartItems[index]['quantity'] > 1) {
       _cartItems[index]['quantity'] -= 1;
     } else {
-      _cartItems.removeAt(index); // Remove the item if quantity reaches 0
+      _cartItems.removeAt(index);
     }
+    notifyListeners();
+  }
+
+  // ✅ Clear the cart
+  void clearCart() {
+    _cartItems.clear();
     notifyListeners();
   }
 }

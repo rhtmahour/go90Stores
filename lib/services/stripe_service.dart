@@ -22,11 +22,18 @@ class StripeService {
         ),
       );
 
-      await _processPayment();
-      return true; // Ensure success returns true
+      await Stripe.instance.presentPaymentSheet();
+
+      return true;
     } catch (e) {
-      print("Error in makePayment: $e");
-      return false; // Only return false for actual failures
+      print("Stripe payment failed: $e");
+
+      if (e is StripeException) {
+        final error = e.error;
+        print("Stripe error: ${error.code} | ${error.message}");
+      }
+
+      return false;
     }
   }
 

@@ -1,4 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:go90stores/orderpage.dart';
 import 'package:go90stores/services/stripe_service.dart';
 import 'package:provider/provider.dart';
 import 'cart_provider.dart';
@@ -157,56 +160,44 @@ class ProceedToCheckout extends StatelessWidget {
   }
 
   Widget _buildCheckoutButton(CartProvider cartProvider, BuildContext context) {
-    double totalAmount = cartProvider.getTotalPrice();
+    return ElevatedButton(
+      onPressed: () async {
+        if (cartProvider.cartItems.isEmpty) return;
 
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(vertical: 12),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          padding: EdgeInsets.symmetric(vertical: 14),
-          backgroundColor: Colors.deepPurple,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-          elevation: 3,
-        ),
-        onPressed: () async {
-          try {
-            bool paymentSuccess =
-                await StripeService.instance.makePayment(totalAmount);
+        final total = cartProvider.getTotalPrice();
+        final paymentSuccess = await StripeService.instance.makePayment(total);
 
-            if (paymentSuccess) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text("Order placed successfully!"),
-                  backgroundColor: Colors.green,
-                ),
-              );
-              cartProvider.cartItems.clear();
-              cartProvider.notifyListeners();
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text("Payment failed. Please try again."),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            }
-          } catch (e) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text("An error occurred: $e"),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-        },
-        child: Text(
-          "Place Order - ₹${totalAmount.toStringAsFixed(2)}",
-          style: TextStyle(
-              fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-        ),
-      ),
+        if (paymentSuccess) {
+          final user = FirebaseAuth.instance.currentUser;
+          final orderId = DateTime.now().millisecondsSinceEpoch.toString();
+
+          final orderData = {
+            'userId': user?.uid,
+            'orderId': orderId,
+            'products': cartProvider.cartItems,
+            'totalAmount': total,
+            'date': DateTime.now().toIso8601String(),
+            'status': 'Pending',
+          };
+
+          await FirebaseFirestore.instance
+              .collection('orders')
+              .doc(orderId)
+              .set(orderData);
+
+          cartProvider.clearCart();
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const Orderpage()),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Payment failed. Try again.")),
+          );
+        }
+      },
+      child: const Text("Place Order"),
     );
   }
 }
