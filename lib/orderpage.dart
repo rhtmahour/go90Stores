@@ -9,10 +9,16 @@ class Orderpage extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
 
+    if (user == null) {
+      return const Scaffold(
+        body: Center(child: Text("Please log in to view orders")),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text('Orders', style: TextStyle(color: Colors.white)),
+        title: const Text('My Orders', style: TextStyle(color: Colors.white)),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -23,47 +29,60 @@ class Orderpage extends StatelessWidget {
           ),
         ),
       ),
-      body: user == null
-          ? Center(child: Text("Please log in to view orders"))
-          : StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('orders')
-                  .where('userId', isEqualTo: user.uid)
-                  .orderBy('date', descending: true)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                }
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('orders')
+            .where('userId', isEqualTo: user.uid)
+            .orderBy('date', descending: true)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text("Error: ${snapshot.error}"));
+          }
 
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return Center(child: Text("No orders found"));
-                }
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Center(child: Text("No orders found"));
+          }
 
-                final orders = snapshot.data!.docs;
+          final orders = snapshot.data!.docs;
 
-                return ListView.builder(
-                  itemCount: orders.length,
-                  itemBuilder: (context, index) {
-                    final order = orders[index].data() as Map<String, dynamic>;
+          return ListView.builder(
+            itemCount: orders.length,
+            itemBuilder: (context, index) {
+              final order = orders[index].data() as Map<String, dynamic>;
 
-                    return ListTile(
-                      title: Text("Order #${order['orderId']}"),
-                      subtitle: Text("₹${order['totalAmount']}"),
-                      trailing: Icon(Icons.arrow_forward_ios),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => OrderDetailPage(orderData: order),
-                          ),
-                        );
-                      },
+              return Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                child: ListTile(
+                  tileColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    side: const BorderSide(
+                      color: Colors.grey,
+                      width: 0.5,
+                    ),
+                  ),
+                  title: Text("OrderId ${order['orderId']}"),
+                  subtitle: Text("₹${order['totalAmount']}"),
+                  trailing: const Icon(Icons.arrow_forward_ios),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => OrderDetailPage(orderData: order),
+                      ),
                     );
                   },
-                );
-              },
-            ),
+                ),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }
@@ -79,7 +98,20 @@ class OrderDetailPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Order #${orderData['orderId']}"),
+        title: Text(
+          "OrderId ${orderData['orderId']}",
+          style: TextStyle(color: Colors.white),
+        ),
+        centerTitle: true,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blueAccent, Colors.purpleAccent],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
       ),
       body: ListView(
         children: [
