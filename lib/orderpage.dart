@@ -58,11 +58,11 @@ class Orderpage extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
                 child: ListTile(
-                  tileColor: Colors.white,
+                  tileColor: Colors.grey[100],
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                     side: const BorderSide(
-                      color: Colors.grey,
+                      color: Colors.purple,
                       width: 0.5,
                     ),
                   ),
@@ -98,10 +98,8 @@ class OrderDetailPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          "OrderId ${orderData['orderId']}",
-          style: TextStyle(color: Colors.white),
-        ),
+        title: Text("OrderId ${orderData['orderId']}",
+            style: const TextStyle(color: Colors.white)),
         centerTitle: true,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
@@ -113,34 +111,73 @@ class OrderDetailPage extends StatelessWidget {
           ),
         ),
       ),
-      body: ListView(
-        children: [
-          ListTile(
-            title: Text("Date"),
-            subtitle: Text(orderData['date']),
-          ),
-          ListTile(
-            title: Text("Total"),
-            subtitle: Text("₹${orderData['totalAmount']}"),
-          ),
-          ListTile(
-            title: Text("Status"),
-            subtitle: Text(orderData['status']),
-          ),
-          Divider(),
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child:
-                Text("Products", style: Theme.of(context).textTheme.titleLarge),
-          ),
-          ...products.map((product) => ListTile(
-                leading: Image.network(product['productImage'],
-                    width: 50, height: 50, fit: BoxFit.cover),
-                title: Text(product['name']),
-                subtitle: Text("Qty: ${product['quantity']}"),
-                trailing: Text("₹${product['salePrice']}"),
-              )),
-        ],
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildDetailCard("Date", orderData['date']),
+            _buildDetailCard("Total Amount", "₹${orderData['totalAmount']}"),
+            _buildDetailCard("Status", orderData['status']),
+            const SizedBox(height: 16),
+            Text("Products",
+                style: Theme.of(context)
+                    .textTheme
+                    .titleLarge
+                    ?.copyWith(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Expanded(
+              child: ListView.separated(
+                itemCount: products.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                itemBuilder: (context, index) {
+                  final product = products[index];
+                  return Card(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    elevation: 2,
+                    child: ListTile(
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          product['productImage'],
+                          width: 50,
+                          height: 50,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const Icon(
+                              Icons.image_not_supported,
+                              color: Colors.grey),
+                        ),
+                      ),
+                      title: Text(product['name'],
+                          style: const TextStyle(fontWeight: FontWeight.w600)),
+                      subtitle: Text("Qty: ${product['quantity']}"),
+                      trailing: Text("₹${product['salePrice']}",
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green)),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailCard(String title, String value) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 2,
+      child: ListTile(
+        title: Text(title,
+            style: const TextStyle(
+                fontWeight: FontWeight.bold, color: Colors.deepPurple)),
+        subtitle: Text(value,
+            style: const TextStyle(fontSize: 16, color: Colors.black87)),
       ),
     );
   }

@@ -62,7 +62,7 @@ class OnboardingPage extends StatelessWidget {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(horizontal: 40, vertical: 14),
-                  backgroundColor: Color.fromARGB(5, 29, 149, 170),
+                  backgroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
@@ -88,7 +88,7 @@ class OnboardingPage extends StatelessWidget {
                 child: Text(
                   "Start Shopping",
                   style: TextStyle(
-                    color: Colors.white,
+                    color: const Color.fromARGB(255, 53, 121, 156),
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),

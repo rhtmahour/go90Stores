@@ -40,6 +40,9 @@ class ProceedToCheckout extends StatelessWidget {
               _buildOrderSummary(cartProvider),
               _buildSectionTitle("Payment Method"),
               _buildPaymentMethod(),
+              SizedBox(
+                height: 10,
+              ),
               _buildCheckoutButton(cartProvider, context),
             ],
           ),
@@ -160,44 +163,58 @@ class ProceedToCheckout extends StatelessWidget {
   }
 
   Widget _buildCheckoutButton(CartProvider cartProvider, BuildContext context) {
-    return ElevatedButton(
-      onPressed: () async {
-        if (cartProvider.cartItems.isEmpty) return;
+    return Center(
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          padding: EdgeInsets.symmetric(horizontal: 40, vertical: 14),
+          backgroundColor: Colors.purple,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+        ),
+        onPressed: () async {
+          if (cartProvider.cartItems.isEmpty) return;
 
-        final total = cartProvider.getTotalPrice();
-        final paymentSuccess = await StripeService.instance.makePayment(total);
+          final total = cartProvider.getTotalPrice();
+          final paymentSuccess =
+              await StripeService.instance.makePayment(total);
 
-        if (paymentSuccess) {
-          final user = FirebaseAuth.instance.currentUser;
-          final orderId = DateTime.now().millisecondsSinceEpoch.toString();
+          if (paymentSuccess) {
+            final user = FirebaseAuth.instance.currentUser;
+            final orderId = DateTime.now().millisecondsSinceEpoch.toString();
 
-          final orderData = {
-            'userId': user?.uid,
-            'orderId': orderId,
-            'products': cartProvider.cartItems,
-            'totalAmount': total,
-            'date': DateTime.now().toIso8601String(),
-            'status': 'Pending',
-          };
+            final orderData = {
+              'userId': user?.uid,
+              'orderId': orderId,
+              'products': cartProvider.cartItems,
+              'totalAmount': total,
+              'date': DateTime.now().toIso8601String(),
+              'status': 'Pending',
+            };
 
-          await FirebaseFirestore.instance
-              .collection('orders')
-              .doc(orderId)
-              .set(orderData);
+            await FirebaseFirestore.instance
+                .collection('orders')
+                .doc(orderId)
+                .set(orderData);
 
-          cartProvider.clearCart();
+            cartProvider.clearCart();
 
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const Orderpage()),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Payment failed. Try again.")),
-          );
-        }
-      },
-      child: const Text("Place Order"),
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const Orderpage()),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Payment failed. Try again.")),
+            );
+          }
+        },
+        child: const Text(
+          "Place Order",
+          style: TextStyle(
+              color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+      ),
     );
   }
 }
