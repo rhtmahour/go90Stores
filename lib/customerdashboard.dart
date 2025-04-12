@@ -6,11 +6,15 @@ import 'package:go90stores/adminlogin.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go90stores/brandpage.dart';
 import 'package:go90stores/category.dart';
+import 'package:go90stores/customernotification.dart';
+import 'package:go90stores/customersettings.dart';
 import 'package:go90stores/homebottombar.dart';
 import 'package:go90stores/orderpage.dart';
 import 'package:go90stores/productsearch.dart';
+import 'package:go90stores/rateandreview.dart';
 import 'package:go90stores/slider1.dart';
 import 'package:go90stores/slider2.dart';
+import 'package:go90stores/support.dart';
 import 'package:image_picker/image_picker.dart';
 
 class Customerdashboard extends StatefulWidget {
@@ -188,7 +192,13 @@ class _CustomerdashboardState extends State<Customerdashboard> {
                 'Ratings and Reviews',
                 style: TextStyle(fontWeight: FontWeight.w500),
               ),
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const Rateandreview(),
+                    ));
+              },
             ),
             Divider(),
             ListTile(
@@ -197,7 +207,13 @@ class _CustomerdashboardState extends State<Customerdashboard> {
                 'Support',
                 style: TextStyle(fontWeight: FontWeight.w500),
               ),
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const Support(),
+                    ));
+              },
             ),
             Divider(),
             ListTile(
@@ -206,7 +222,13 @@ class _CustomerdashboardState extends State<Customerdashboard> {
                 'Settings',
                 style: TextStyle(fontWeight: FontWeight.w500),
               ),
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const Customersettings(),
+                    ));
+              },
             ),
             Divider(),
             ListTile(
@@ -215,7 +237,13 @@ class _CustomerdashboardState extends State<Customerdashboard> {
                 'Notifications',
                 style: TextStyle(fontWeight: FontWeight.w500),
               ),
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const Customernotification(),
+                    ));
+              },
             ),
             Divider(),
             ListTile(
