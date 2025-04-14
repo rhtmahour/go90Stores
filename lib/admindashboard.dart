@@ -90,7 +90,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
               child: const Text("No"),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              //style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
               onPressed: () async {
                 await _auth.signOut();
                 Navigator.pushAndRemoveUntil(
