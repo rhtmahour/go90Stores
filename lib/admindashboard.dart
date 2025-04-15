@@ -110,13 +110,19 @@ class _AdminDashboardState extends State<AdminDashboard> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final isWideScreen = screenWidth > 800;
+    final isMediumScreen = screenWidth > 600;
+    final fontSize = screenWidth < 600 ? 16.0 : 22.0;
 
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'Admin Dashboard',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
@@ -184,44 +190,43 @@ class _AdminDashboardState extends State<AdminDashboard> {
           ),
         ],
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          // Dashboard Summary
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: LayoutBuilder(
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return Wrap(
+                    spacing: 16,
+                    runSpacing: 16,
+                    alignment: WrapAlignment.center,
+                    children: <Widget>[
+                      _buildSummaryCard(
+                          "Total Stores", Icons.store, Colors.green),
+                      _buildSummaryCard(
+                          "Pending", Icons.pending, Colors.orange),
+                      _buildSummaryCard("Rejected", Icons.close, Colors.red),
+                      _buildSummaryCard(
+                          "Approved", Icons.verified, Colors.blue),
+                    ],
+                  );
+                },
+              ),
+            ),
+            const Divider(height: 20, thickness: 2),
+            LayoutBuilder(
               builder: (context, constraints) {
-                // Adapt the summary cards to the available width
-                final isWideScreen = constraints.maxWidth > 600;
                 return Flex(
                   direction: isWideScreen ? Axis.horizontal : Axis.vertical,
-                  mainAxisAlignment: isWideScreen
-                      ? MainAxisAlignment.spaceEvenly
-                      : MainAxisAlignment.center,
-                  children: <Widget>[
-                    _buildSummaryCard(
-                        "Total Stores", Icons.store, Colors.green),
-                    _buildSummaryCard("Pending", Icons.pending, Colors.orange),
-                    _buildSummaryCard("Rejected", Icons.close, Colors.red),
-                    _buildSummaryCard("Approved", Icons.verified, Colors.blue),
-                  ],
-                );
-              },
-            ),
-          ),
-          const Divider(height: 20, thickness: 2),
-          // Split the UI into two sections (Stores and Activities)
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final isWideScreen = constraints.maxWidth > 800;
-
-                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Left side - Stores List
-                    Flexible(
-                      flex: 2,
+                    // Store List Section
+                    SizedBox(
+                      width: isWideScreen
+                          ? screenWidth * 0.65
+                          : screenWidth, // Full width for mobile
                       child: StreamBuilder<QuerySnapshot>(
                         stream: FirebaseFirestore.instance
                             .collection('stores')
@@ -245,10 +250,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           }
 
                           final storeDocs = snapshot.data!.docs;
-                          print(
-                              'Store data: ${storeDocs.map((doc) => doc.data()).toList()}'); // Debugging line
 
                           return ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
                             itemCount: storeDocs.length,
                             itemBuilder: (context, index) {
                               final store = storeDocs[index];
@@ -269,17 +274,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                   child: ListTile(
                                     tileColor: Colors.purple,
                                     onTap: () {
-                                      // Navigate to store details page
                                       showStoreDetailsDialog(context, store.id);
                                     },
                                     contentPadding: const EdgeInsets.all(15),
                                     leading: CircleAvatar(
                                       radius: 35,
-                                      backgroundColor: Colors.grey[
-                                          300], // Light grey background for better UI
+                                      backgroundColor: Colors.grey[300],
                                       child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(
-                                            35), // Ensures perfect circular clipping
+                                        borderRadius: BorderRadius.circular(35),
                                         child: imageUrl.isNotEmpty
                                             ? Image.network(
                                                 imageUrl,
@@ -295,85 +297,27 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                     ),
                                     title: Row(
                                       children: [
-                                        Text(
-                                          storename,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 30,
-                                            color: Colors.white,
+                                        Flexible(
+                                          child: Text(
+                                            storename,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 22,
+                                              color: Colors.white,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
                                         const SizedBox(width: 8),
-                                        if (data['status'] == 'Approved')
-                                          const Icon(
-                                            Icons.verified,
-                                            color: Colors.blue,
-                                            size: 18,
-                                          )
-                                        else if (data['status'] == 'Pending')
-                                          const Icon(
-                                            Icons.pending,
-                                            color: Colors.orange,
-                                            size: 18,
-                                          )
-                                        else if (data['status'] == 'Rejected')
-                                          const Icon(
-                                            Icons.close,
-                                            color: Colors.red,
-                                            size: 18,
-                                          )
-                                        else
-                                          const SizedBox.shrink(),
+                                        _buildStatusIcon(data['status']),
                                       ],
                                     ),
                                     subtitle: Text(
                                       'GST Number: $gstNumber',
-                                      style: TextStyle(color: Colors.white),
+                                      style:
+                                          const TextStyle(color: Colors.white),
                                     ),
-                                    trailing: PopupMenuButton<String>(
-                                      icon: const Icon(
-                                        Icons.more_vert,
-                                        color: Colors.white,
-                                      ),
-                                      onSelected: (String value) async {
-                                        final storeId = store.id;
-                                        try {
-                                          await FirebaseFirestore.instance
-                                              .collection('stores')
-                                              .doc(storeId)
-                                              .update({'status': value});
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            SnackBar(
-                                                content: Text(
-                                                    'Status updated to $value')),
-                                          );
-                                        } catch (e) {
-                                          print('Error updating status: $e');
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            SnackBar(
-                                                content: Text(
-                                                    'Error updating status: $e')),
-                                          );
-                                        }
-                                      },
-                                      itemBuilder: (BuildContext context) =>
-                                          <PopupMenuEntry<String>>[
-                                        const PopupMenuItem<String>(
-                                          value: 'Approved',
-                                          child: Text('Approved'),
-                                        ),
-                                        const PopupMenuItem<String>(
-                                          value: 'Pending',
-                                          child: Text('Pending'),
-                                        ),
-                                        const PopupMenuItem<String>(
-                                          value: 'Rejected',
-                                          child: Text('Rejected'),
-                                        ),
-                                      ],
-                                    ),
+                                    trailing: _buildPopupMenu(store.id),
                                   ),
                                 ),
                               );
@@ -382,167 +326,206 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         },
                       ),
                     ),
-                    // Right side - Activities
-                    if (isWideScreen)
-                      Flexible(
-                        flex: 1,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: SingleChildScrollView(
-                            // Added to make the content scrollable
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                TextButton(
-                                  onPressed: () {
-                                    // Navigate to Lowest Purchase Price Report using MaterialPageRoute
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            LowestPurchasePriceReport(), // Target Page
-                                      ),
-                                    );
-                                  },
-                                  style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 20,
-                                      horizontal: 24,
-                                    ),
-                                    backgroundColor: Colors
-                                        .purple, // Transparent to show gradient
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
+                    const Divider(height: 20, thickness: 2),
+                    // Right Panel
+                    SizedBox(
+                      width: isWideScreen ? screenWidth * 0.35 : screenWidth,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        LowestPurchasePriceReport(),
                                   ),
-                                  child: const Text(
-                                    'Lowest Purchase Price Report',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                      color: Colors.white,
-                                    ),
-                                  ),
+                                );
+                              },
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 20, horizontal: 24),
+                                backgroundColor: Colors.purple,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
-                                const SizedBox(height: 16),
-                                _buildActivityCard(
-                                  title: "Total Sales",
-                                  value: "\$.12,345",
-                                  icon: Icons.attach_money,
-                                  color: Colors.green,
+                              ),
+                              child: const Text(
+                                'Lowest Purchase Price Report',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: Colors.white,
                                 ),
-                                const SizedBox(height: 16),
-                                _buildActivityCard(
-                                  title: "Total Products",
-                                  value: "235",
-                                  icon: Icons.inventory,
-                                  color: Colors.blue,
-                                ),
-                                const SizedBox(height: 16),
-                                _buildActivityCard(
-                                  title: "Total Revenue",
-                                  value: "\$50,000",
-                                  icon: Icons.bar_chart,
-                                  color: Colors.red,
-                                ),
-                              ],
+                              ),
                             ),
-                          ),
+                            const SizedBox(height: 16),
+                            _buildActivityCard(
+                              title: "Total Sales",
+                              value: "\$.12,345",
+                              icon: Icons.attach_money,
+                              color: Colors.green,
+                            ),
+                            const SizedBox(height: 16),
+                            _buildActivityCard(
+                              title: "Total Products",
+                              value: "235",
+                              icon: Icons.inventory,
+                              color: Colors.blue,
+                            ),
+                            const SizedBox(height: 16),
+                            _buildActivityCard(
+                              title: "Total Revenue",
+                              value: "\$50,000",
+                              icon: Icons.bar_chart,
+                              color: Colors.red,
+                            ),
+                          ],
                         ),
                       ),
+                    )
                   ],
                 );
               },
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
-}
 
-Widget _buildActivityCard({
-  required String title,
-  required String value,
-  required IconData icon,
-  required Color color,
-}) {
-  return Card(
-    color: Colors.white,
-    elevation: 4,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    child: Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 25,
-            backgroundColor: color.withOpacity(0.1),
-            child: Icon(icon, color: color, size: 30),
-          ),
-          const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+  Widget _buildSummaryCard(String title, IconData icon, Color color) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    final double iconSize = isMobile ? 30 : 40;
+    final double textSize = isMobile ? 14 : 18;
+    final double padding = isMobile ? 10 : 12;
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 140, maxWidth: 200),
+      child: Card(
+        color: Colors.purple,
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(padding),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Icon(icon, color: color, size: iconSize),
+              const SizedBox(height: 10),
               Text(
                 title,
-                style: const TextStyle(
-                  color: Colors.purple,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                value,
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: color,
+                  fontSize: textSize,
+                  color: Colors.white,
                 ),
               ),
             ],
           ),
-        ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-Widget _buildSummaryCard(String title, IconData icon, Color color) {
-  return Card(
-    color: Colors.purple,
-    elevation: 4,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    child: Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: <Widget>[
-          Icon(icon, color: color, size: 30),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: Colors.white,
+  Widget _buildActivityCard({
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Card(
+      color: Colors.white,
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 25,
+              backgroundColor: color.withOpacity(0.1),
+              child: Icon(icon, color: color, size: 30),
             ),
-          ),
-        ],
+            const SizedBox(width: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.purple,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: color,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
 // Helper function for placeholder
-Widget _buildPlaceholder() {
-  return Container(
-    width: 70,
-    height: 70,
-    decoration: BoxDecoration(
-      color: Colors.white, // Slightly darker grey for contrast
-      borderRadius: BorderRadius.circular(35),
-    ),
-    child: const Icon(Icons.store, size: 40, color: Colors.green),
-  );
+  Widget _buildPlaceholder() {
+    return Container(
+      width: 70,
+      height: 70,
+      decoration: BoxDecoration(
+        color: Colors.white, // Slightly darker grey for contrast
+        borderRadius: BorderRadius.circular(35),
+      ),
+      child: const Icon(Icons.store, size: 40, color: Colors.green),
+    );
+  }
+
+  Widget _buildStatusIcon(String? status) {
+    switch (status) {
+      case 'Approved':
+        return const Icon(Icons.verified, color: Colors.blue, size: 18);
+      case 'Pending':
+        return const Icon(Icons.pending, color: Colors.orange, size: 18);
+      case 'Rejected':
+        return const Icon(Icons.close, color: Colors.red, size: 18);
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  Widget _buildPopupMenu(String storeId) {
+    return PopupMenuButton<String>(
+      icon: const Icon(Icons.more_vert, color: Colors.white),
+      onSelected: (String value) async {
+        try {
+          await FirebaseFirestore.instance
+              .collection('stores')
+              .doc(storeId)
+              .update({'status': value});
+        } catch (e) {
+          print('Error updating status: $e');
+        }
+      },
+      itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+        const PopupMenuItem<String>(value: 'Approved', child: Text('Approved')),
+        const PopupMenuItem<String>(value: 'Pending', child: Text('Pending')),
+        const PopupMenuItem<String>(value: 'Rejected', child: Text('Rejected')),
+      ],
+    );
+  }
 }

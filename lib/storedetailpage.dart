@@ -156,20 +156,32 @@ void showStoreDetailsDialog(BuildContext context, String storeId) async {
 // Widget to Build Each Detail Row with an Icon
 Widget _buildDetailRow(IconData icon, String label, String value) {
   return Padding(
-    padding: const EdgeInsets.only(bottom: 8.0),
+    padding: const EdgeInsets.symmetric(vertical: 6.0),
     child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, color: Colors.blueAccent, size: 20),
         const SizedBox(width: 8),
-        Text(
-          "$label ",
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
         Expanded(
-          child: Text(
-            value,
-            style: const TextStyle(
-                color: Colors.purple, fontWeight: FontWeight.bold),
+          child: RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: "$label ",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                TextSpan(
+                  text: value,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.purple,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],

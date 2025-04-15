@@ -143,7 +143,7 @@ class _LowestPurchasePriceReportState extends State<LowestPurchasePriceReport> {
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         flexibleSpace: Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [Colors.blue, Colors.purple],
               begin: Alignment.topLeft,
@@ -156,109 +156,129 @@ class _LowestPurchasePriceReportState extends State<LowestPurchasePriceReport> {
         builder: (context, constraints) {
           bool isWideScreen = constraints.maxWidth > 600;
 
-          return Center(
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              constraints: BoxConstraints(
-                maxWidth: isWideScreen ? 800 : double.infinity,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    onPressed: _isLoading ? null : calculateLowestPurchasePrice,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 12, horizontal: 24),
-                      backgroundColor: Colors.green,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+          return SingleChildScrollView(
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                constraints: BoxConstraints(
+                  maxWidth: isWideScreen ? 1000 : double.infinity,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: 20),
+                    ElevatedButton.icon(
+                      onPressed:
+                          _isLoading ? null : calculateLowestPurchasePrice,
+                      icon: const Icon(Icons.analytics, color: Colors.white),
+                      label: const Text(
+                        'Generate Report',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        backgroundColor: const Color(0xFF6A1B9A), // Rich purple
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
-                    child: const Text(
-                      'Generate Report',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                    const SizedBox(height: 20),
+
+                    // Show loading spinner
+                    if (_isLoading)
+                      const Center(child: CircularProgressIndicator()),
+
+                    const SizedBox(height: 16),
+
+                    if (reportData.isNotEmpty) ...[
+                      const Text(
+                        "Results",
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
                       ),
-                    ),
-                  ),
-                  const Divider(
-                    color: Colors.purpleAccent,
-                    thickness: 2,
-                    endIndent: 50,
-                  ),
-                  if (reportData.isNotEmpty)
-                    Expanded(
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.vertical,
-                        child: DataTable(
-                          columns: const [
-                            DataColumn(
-                              label: Text(
-                                'Store Name',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            DataColumn(
-                              label: Text(
-                                'Product Name',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            DataColumn(
-                              label: Text(
-                                'LowestPP',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ],
-                          rows: reportData.map((item) {
-                            return DataRow(
-                              cells: [
+                      const SizedBox(height: 10),
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: DataTable(
+                            columnSpacing: 30,
+                            columns: const [
+                              DataColumn(
+                                  label: Text('Store ID',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold))),
+                              DataColumn(
+                                  label: Text('Product Name',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold))),
+                              DataColumn(
+                                  label: Text('Lowest Price',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold))),
+                            ],
+                            rows: reportData.map((item) {
+                              return DataRow(cells: [
                                 DataCell(Text(item['storeName'] ?? 'N/A')),
                                 DataCell(Text(item['productName'] ?? 'N/A')),
                                 DataCell(Text(
                                     '₹${item['lowestPurchasePrice'] ?? 'N/A'}')),
-                              ],
-                            );
-                          }).toList(),
+                              ]);
+                            }).toList(),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+
+                    ElevatedButton.icon(
+                      onPressed: _isLoading || reportData.isEmpty
+                          ? null
+                          : generateAndDownloadReport,
+                      icon: const Icon(Icons.download, color: Colors.white),
+                      label: const Text(
+                        'Download CSV Report',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        backgroundColor: const Color(0xFF6A1B9A),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: _isLoading ? null : generateAndDownloadReport,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 12, horizontal: 24),
-                      backgroundColor: Colors.blue,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+
+                    const SizedBox(height: 20),
+                    if (_statusMessage.isNotEmpty)
+                      Text(
+                        _statusMessage,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: _statusMessage.contains('successfully')
+                              ? Colors.green
+                              : Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    child: const Text(
-                      'Download CSV Report',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    _statusMessage,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: _statusMessage.contains('successfully')
-                          ? Colors.green
-                          : Colors.red,
-                    ),
-                  ),
-                ],
+                    const SizedBox(height: 20),
+                  ],
+                ),
               ),
             ),
           );
