@@ -6,6 +6,7 @@ import 'package:go90stores/adminlogin.dart';
 import 'package:go90stores/adminnotificationscreen.dart';
 import 'package:go90stores/lowestpurchasepricereport.dart';
 import 'package:go90stores/storedetailpage.dart';
+import 'package:shimmer/shimmer.dart';
 
 class AdminDashboard extends StatefulWidget {
   final String storeId;
@@ -224,9 +225,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   children: [
                     // Store List Section
                     SizedBox(
-                      width: isWideScreen
-                          ? screenWidth * 0.65
-                          : screenWidth, // Full width for mobile
+                      width: isWideScreen ? screenWidth * 0.65 : screenWidth,
                       child: StreamBuilder<QuerySnapshot>(
                         stream: FirebaseFirestore.instance
                             .collection('stores')
@@ -265,21 +264,37 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
                               return Padding(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 8.0, vertical: 5.0),
-                                child: Card(
-                                  elevation: 4,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
+                                    horizontal: 12.0, vertical: 8.0),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20),
+                                    //color: Colors.grey,
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Colors.purpleAccent,
+                                        Colors.deepPurple,
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.15),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 6),
+                                      ),
+                                    ],
                                   ),
                                   child: ListTile(
-                                    tileColor: Colors.purple,
-                                    onTap: () {
-                                      showStoreDetailsDialog(context, store.id);
-                                    },
-                                    contentPadding: const EdgeInsets.all(15),
+                                    onTap: () => showStoreDetailsDialog(
+                                        context, store.id),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 12),
                                     leading: CircleAvatar(
                                       radius: 35,
-                                      backgroundColor: Colors.grey[300],
+                                      backgroundColor: Colors.purple,
                                       child: ClipRRect(
                                         borderRadius: BorderRadius.circular(35),
                                         child: imageUrl.isNotEmpty
@@ -292,18 +307,19 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                                         stackTrace) =>
                                                     _buildPlaceholder(),
                                               )
-                                            : _buildPlaceholder(),
+                                            : _buildShimmerAvatar(),
                                       ),
                                     ),
                                     title: Row(
                                       children: [
-                                        Flexible(
+                                        Expanded(
                                           child: Text(
                                             storename,
                                             style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 22,
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.w600,
                                               color: Colors.white,
+                                              letterSpacing: 0.5,
                                             ),
                                             overflow: TextOverflow.ellipsis,
                                           ),
@@ -313,9 +329,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                       ],
                                     ),
                                     subtitle: Text(
-                                      'GST Number: $gstNumber',
-                                      style:
-                                          const TextStyle(color: Colors.white),
+                                      'GST: $gstNumber',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.white.withOpacity(0.9),
+                                      ),
                                     ),
                                     trailing: _buildPopupMenu(store.id),
                                   ),
@@ -326,6 +344,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         },
                       ),
                     ),
+
                     const Divider(height: 20, thickness: 2),
                     // Right Panel
                     SizedBox(
@@ -334,8 +353,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
                           children: [
-                            TextButton(
-                              onPressed: () {
+                            InkWell(
+                              onTap: () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -344,20 +363,38 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                   ),
                                 );
                               },
-                              style: TextButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 20, horizontal: 24),
-                                backgroundColor: Colors.purple,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(16),
+                              child: Ink(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.purpleAccent,
+                                      Colors.deepPurple
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.purple.withOpacity(0.4),
+                                      blurRadius: 10,
+                                      offset: Offset(0, 4),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                              child: const Text(
-                                'Lowest Purchase Price Report',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: Colors.white,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 18, horizontal: 26),
+                                  child: const Text(
+                                    'Lowest Purchase Price Report',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -401,33 +438,71 @@ class _AdminDashboardState extends State<AdminDashboard> {
     final isMobile = screenWidth < 600;
     final double iconSize = isMobile ? 30 : 40;
     final double textSize = isMobile ? 14 : 18;
-    final double padding = isMobile ? 10 : 12;
+    final double padding = isMobile ? 12 : 16;
 
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 140, maxWidth: 200),
-      child: Card(
-        color: Colors.purple,
-        elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(padding),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Icon(icon, color: color, size: iconSize),
-              const SizedBox(height: 10),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: textSize,
-                  color: Colors.white,
-                ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minWidth: 120, maxWidth: 160),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              colors: [
+                color.withOpacity(0.8),
+                Colors.black.withOpacity(0.1),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: color.withOpacity(0.4),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
               ),
             ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(20),
+              splashColor: Colors.white24,
+              onTap: () {},
+              child: Padding(
+                padding: EdgeInsets.all(padding), // Internal padding
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        icon,
+                        color: Colors.white,
+                        size: iconSize,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      title,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: textSize,
+                        color: Colors.white,
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -441,7 +516,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
     required Color color,
   }) {
     return Card(
-      color: Colors.white,
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
@@ -460,7 +534,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 Text(
                   title,
                   style: const TextStyle(
-                    color: Colors.purple,
+                    //color: Colors.purple,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
@@ -478,6 +552,19 @@ class _AdminDashboardState extends State<AdminDashboard> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+// Helper function for shimmer avatar
+  Widget _buildShimmerAvatar() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Container(
+        width: 70,
+        height: 70,
+        color: Colors.white,
       ),
     );
   }
