@@ -34,26 +34,25 @@ class MyStoreState extends State<MyStore> {
           content: const Text("Do you want to logout?"),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
+              onPressed: () => Navigator.of(context).pop(),
               child: const Text("No"),
             ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
+            ElevatedButton(
+              //style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
+              onPressed: () async {
+                await _auth.signOut();
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AdminLogin()),
+                  (route) => false,
+                );
+              },
               child: const Text("Yes"),
             ),
           ],
         );
       },
     );
-
-    if (confirmLogout == true) {
-      await _auth.signOut();
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const AdminLogin()),
-        (route) => false,
-      );
-    }
   }
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -145,7 +144,6 @@ class MyStoreState extends State<MyStore> {
       final String imageUrl = product['image'] ?? ''; // ✅ Fetch product image
 
       String? imagePath;
-
       // ✅ Download image and save locally if a valid URL exists
       if (imageUrl.isNotEmpty) {
         try {

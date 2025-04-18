@@ -6,6 +6,7 @@ import 'package:go90stores/adminlogin.dart';
 import 'package:go90stores/adminnotificationscreen.dart';
 import 'package:go90stores/lowestpurchasepricereport.dart';
 import 'package:go90stores/storedetailpage.dart';
+import 'package:go90stores/storedrawerheader.dart';
 import 'package:shimmer/shimmer.dart';
 
 class AdminDashboard extends StatefulWidget {
@@ -119,7 +120,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
       appBar: AppBar(
         centerTitle: true,
         title: Text(
-          'Admin Dashboard',
+          'Admin',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -190,6 +191,26 @@ class _AdminDashboardState extends State<AdminDashboard> {
             ),
           ),
         ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            AdminDrawerHeader(),
+            const ListTile(
+              iconColor: Colors.blue,
+              textColor: Colors.purple,
+              leading: Icon(
+                Icons.home,
+                size: 20,
+              ),
+              title: Text(
+                'Home',
+                style: TextStyle(fontSize: 20),
+              ),
+            ),
+          ],
+        ),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -613,6 +634,41 @@ class _AdminDashboardState extends State<AdminDashboard> {
         const PopupMenuItem<String>(value: 'Pending', child: Text('Pending')),
         const PopupMenuItem<String>(value: 'Rejected', child: Text('Rejected')),
       ],
+    );
+  }
+}
+
+class AdminDrawerHeader extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return DrawerHeader(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.blue, Colors.purple],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircleAvatar(
+            radius: 40,
+            backgroundColor: Colors.white,
+            child:
+                Icon(Icons.admin_panel_settings, size: 40, color: Colors.blue),
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'Admin Panel',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
