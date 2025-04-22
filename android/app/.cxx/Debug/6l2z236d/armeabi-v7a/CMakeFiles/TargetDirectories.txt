@@ -1,0 +1,2 @@
+C:/Users/Admin/Desktop/go90Stores/android/app/.cxx/Debug/6l2z236d/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/Users/Admin/Desktop/go90Stores/android/app/.cxx/Debug/6l2z236d/armeabi-v7a/CMakeFiles/rebuild_cache.dir
