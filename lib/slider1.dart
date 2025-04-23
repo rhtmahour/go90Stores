@@ -59,7 +59,7 @@ class _Slider1State extends State<Slider1> {
           position: currentPageIndex.toDouble(), // This should work as a double
           decorator: DotsDecorator(
             color: Colors.blue,
-            activeColor: Colors.purpleAccent,
+            activeColor: Colors.purple,
             size: const Size.square(9.0),
             spacing: const EdgeInsets.all(3.0),
             activeSize: const Size(18.0, 9.0),

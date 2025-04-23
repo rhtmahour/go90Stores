@@ -5,242 +5,79 @@ class Brandpage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Container(
-      height: 400,
-      width: 500,
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
       color: Colors.purple[50],
       child: Column(
-        // Wrapped the Rows in a Column widget
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        //crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Padding(
-            padding: EdgeInsets.only(top: 5, left: 10),
+            padding: EdgeInsets.symmetric(vertical: 10),
             child: Text(
               'Shop By Brands',
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
               ),
             ),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
             children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Container(
-                  height: 100,
-                  width: 150,
-                  //color: Colors.white,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      color: Colors.white),
-                  child: Row(
-                    children: [
-                      const Text(
-                        'TATA Tea',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      Container(
-                        height: 50,
-                        width: 70,
-                        //color: Colors.green[50],
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            color: Colors.white,
-                            image: const DecorationImage(
-                                image: AssetImage('assets/images/tata.png'),
-                                fit: BoxFit.cover)),
-                        alignment: Alignment.topCenter,
-                      )
-                    ],
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Container(
-                  height: 100,
-                  width: 150,
-                  //color: Colors.white,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      color: Colors.white),
-                  child: Row(
-                    children: [
-                      const Text(
-                        'Dettol',
-                        style: TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.w500),
-                      ),
-                      Container(
-                        height: 50,
-                        width: 80,
-                        //color: Colors.green[50],
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            color: Colors.white,
-                            image: const DecorationImage(
-                                image: AssetImage('assets/images/dettol.png'),
-                                fit: BoxFit.cover)),
-                        alignment: Alignment.topCenter,
-                      )
-                    ],
-                  ),
-                ),
-              ),
+              brandCard('TATA Tea', 'assets/images/tata.png', screenWidth),
+              brandCard('Dettol', 'assets/images/dettol.png', screenWidth),
+              brandCard(
+                  'Coca-Cola', 'assets/images/coca_cola.png', screenWidth),
+              brandCard('LOreal', 'assets/images/loreal.png', screenWidth),
+              brandCard(
+                  'India Gate', 'assets/images/india_gate.png', screenWidth),
+              brandCard('Catch', 'assets/images/catch.png', screenWidth),
             ],
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Container(
-                  height: 100,
-                  width: 150,
-                  //color: Colors.white,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      color: Colors.white),
-                  child: Row(
-                    children: [
-                      const Text(
-                        'Coca-Cola',
-                        style: TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.w500),
-                      ),
-                      Container(
-                        height: 50,
-                        width: 70,
-                        //color: Colors.green[50],
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            color: Colors.white,
-                            image: const DecorationImage(
-                                image:
-                                    AssetImage('assets/images/coca_cola.png'),
-                                fit: BoxFit.cover)),
-                        alignment: Alignment.topCenter,
-                      )
-                    ],
-                  ),
-                ),
+        ],
+      ),
+    );
+  }
+
+  Widget brandCard(String brandName, String imagePath, double screenWidth) {
+    final double cardWidth = screenWidth < 600 ? screenWidth / 2 - 20 : 180;
+
+    return Container(
+      width: cardWidth,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        color: Colors.white,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Flexible(
+            child: Text(
+              brandName,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
               ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Container(
-                  height: 100,
-                  width: 150,
-                  //color: Colors.white,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      color: Colors.white),
-                  child: Row(
-                    children: [
-                      const Text(
-                        'LOreal',
-                        style: TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.w500),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(4.0),
-                        child: Container(
-                          height: 50,
-                          width: 90,
-                          //color: Colors.green[50],
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
-                              color: Colors.white,
-                              image: const DecorationImage(
-                                  image: AssetImage('assets/images/loreal.png'),
-                                  fit: BoxFit.cover)),
-                          alignment: Alignment.topCenter,
-                        ),
-                      )
-                    ],
-                  ),
-                ),
-              ),
-            ],
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Container(
-                  height: 100,
-                  width: 150,
-                  //color: Colors.white,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      color: Colors.white),
-                  child: Row(
-                    children: [
-                      const Text(
-                        'India Gate',
-                        style: TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.w500),
-                      ),
-                      Container(
-                        height: 50,
-                        width: 70,
-                        //color: Colors.green[50],
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            color: Colors.white,
-                            image: const DecorationImage(
-                                image:
-                                    AssetImage('assets/images/india_gate.png'),
-                                fit: BoxFit.cover)),
-                        alignment: Alignment.topCenter,
-                      )
-                    ],
-                  ),
-                ),
+          Container(
+            height: 50,
+            width: 60,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              image: DecorationImage(
+                image: AssetImage(imagePath),
+                fit: BoxFit.cover,
               ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Container(
-                  height: 100,
-                  width: 150,
-                  //color: Colors.white,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      color: Colors.white),
-                  child: Row(
-                    children: [
-                      const Text(
-                        'Catch',
-                        style: TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.w500),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Container(
-                          height: 50,
-                          width: 80,
-                          //color: Colors.green[50],
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
-                              color: Colors.white,
-                              image: const DecorationImage(
-                                  image: AssetImage('assets/images/catch.png'),
-                                  fit: BoxFit.cover)),
-                          alignment: Alignment.topCenter,
-                        ),
-                      )
-                    ],
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),
