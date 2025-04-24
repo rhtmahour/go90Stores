@@ -1,6 +1,7 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:dots_indicator/dots_indicator.dart';
 import 'package:flutter/material.dart';
+import 'package:go90stores/productpage.dart';
 
 class Slider1 extends StatefulWidget {
   const Slider1({super.key});
@@ -26,13 +27,23 @@ class _Slider1State extends State<Slider1> {
         CarouselSlider.builder(
           itemCount: imagePaths.length,
           itemBuilder: (context, index, realIndex) {
-            return Container(
-              margin: const EdgeInsets.all(5.0),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8.0),
-                image: DecorationImage(
-                  image: AssetImage(imagePaths[index]),
-                  fit: BoxFit.cover,
+            return InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProductPage(storeId: ''),
+                  ),
+                );
+              },
+              child: Container(
+                margin: const EdgeInsets.all(5.0),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8.0),
+                  image: DecorationImage(
+                    image: AssetImage(imagePaths[index]),
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
             );

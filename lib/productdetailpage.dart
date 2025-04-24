@@ -1,22 +1,24 @@
 import 'package:flutter/material.dart';
 
 class ProductDetailPage extends StatelessWidget {
-  final dynamic product; // Pass the product data
+  final dynamic product;
 
   ProductDetailPage({required this.product});
 
   @override
   Widget build(BuildContext context) {
-    var imageUrl = product['images'] != null && product['images'].isNotEmpty
-        ? product['images'][0]['src']
+    var imageUrl = product['productImage']?.toString().trim().isNotEmpty == true
+        ? product['productImage']
         : 'https://via.placeholder.com/150'; // Fallback image
-    var price = product['price'] ?? 'N/A'; // Product price
+
+    var price = product['salePrice'] ?? 'N/A';
+    var name = product['name'] ?? 'Unnamed Product';
     var description = product['description'] ?? 'No description available';
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          product['name'],
+          name,
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -42,12 +44,16 @@ class ProductDetailPage extends StatelessWidget {
                 child: Image.network(
                   imageUrl,
                   fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.image_not_supported,
+                      size: 100,
+                      color: Colors.grey),
                 ),
               ),
               SizedBox(height: 16),
               // Product Name
               Text(
-                product['name'],
+                name,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 24,
@@ -57,7 +63,7 @@ class ProductDetailPage extends StatelessWidget {
               SizedBox(height: 16),
               // Product Price
               Text(
-                'Price: RS $price',
+                'Price: ₹$price',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 20,

@@ -107,6 +107,9 @@ class _ProductPageState extends State<ProductPage> {
             }
           });
 
+          // 🔀 Shuffle products
+          products.shuffle();
+
           return GridView.builder(
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,

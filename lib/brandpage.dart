@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go90stores/productpage.dart';
 
 class Brandpage extends StatelessWidget {
   const Brandpage({super.key});
@@ -30,14 +31,33 @@ class Brandpage extends StatelessWidget {
             spacing: 10,
             runSpacing: 10,
             children: [
-              brandCard('TATA Tea', 'assets/images/tata.png', screenWidth),
-              brandCard('Dettol', 'assets/images/dettol.png', screenWidth),
               brandCard(
-                  'Coca-Cola', 'assets/images/coca_cola.png', screenWidth),
-              brandCard('LOreal', 'assets/images/loreal.png', screenWidth),
+                  'TATA Tea', 'assets/images/tata.png', screenWidth, context,
+                  () {
+                // Add your onTap functionality here
+              }),
               brandCard(
-                  'India Gate', 'assets/images/india_gate.png', screenWidth),
-              brandCard('Catch', 'assets/images/catch.png', screenWidth),
+                  'Dettol', 'assets/images/dettol.png', screenWidth, context,
+                  () {
+                // Add your onTap functionality here
+              }),
+              brandCard('Coca-Cola', 'assets/images/coca_cola.png', screenWidth,
+                  context, () {
+                // Add your onTap functionality here
+              }),
+              brandCard(
+                  'LOreal', 'assets/images/loreal.png', screenWidth, context,
+                  () {
+                // Add your onTap functionality here
+              }),
+              brandCard('India Gate', 'assets/images/india_gate.png',
+                  screenWidth, context, () {
+                // Add your onTap functionality here
+              }),
+              brandCard(
+                  'Catch', 'assets/images/catch.png', screenWidth, context, () {
+                // Add your onTap functionality here
+              }),
             ],
           ),
         ],
@@ -45,41 +65,54 @@ class Brandpage extends StatelessWidget {
     );
   }
 
-  Widget brandCard(String brandName, String imagePath, double screenWidth) {
+  Widget brandCard(String brandName, String imagePath, double screenWidth,
+      BuildContext context, VoidCallback onTap) {
     final double cardWidth = screenWidth < 600 ? screenWidth / 2 - 20 : 180;
 
-    return Container(
-      width: cardWidth,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: Colors.white,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Flexible(
-            child: Text(
-              brandName,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProductPage(storeId: ''),
           ),
-          Container(
-            height: 50,
-            width: 60,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              image: DecorationImage(
-                image: AssetImage(imagePath),
-                fit: BoxFit.cover,
+        );
+      },
+      borderRadius:
+          BorderRadius.circular(16), // Ensures ripple effect is clipped
+      child: Container(
+        width: cardWidth,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          color: Colors.white,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Flexible(
+              child: Text(
+                brandName,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-          ),
-        ],
+            Container(
+              height: 50,
+              width: 60,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                image: DecorationImage(
+                  image: AssetImage(imagePath),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
