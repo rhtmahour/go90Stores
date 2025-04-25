@@ -173,18 +173,36 @@ class ProceedToCheckout extends StatelessWidget {
           ),
         ),
         onPressed: () async {
-          if (cartProvider.cartItems.isEmpty) return;
+          if (cartProvider.cartItems.isEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Cart is empty")),
+            );
+            return;
+          }
 
-          final total = cartProvider.getTotalPrice();
-          final paymentSuccess =
-              await StripeService.instance.makePayment(total);
+          try {
+            final total = cartProvider.getTotalPrice();
+            final paymentSuccess =
+                await StripeService.instance.makePayment(total);
 
-          if (paymentSuccess) {
+            if (!paymentSuccess) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Payment failed. Try again.")),
+              );
+              return;
+            }
+
             final user = FirebaseAuth.instance.currentUser;
-            final orderId = DateTime.now().millisecondsSinceEpoch.toString();
+            if (user == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("User not logged in")),
+              );
+              return;
+            }
 
+            final orderId = DateTime.now().millisecondsSinceEpoch.toString();
             final orderData = {
-              'userId': user?.uid,
+              'userId': user.uid,
               'orderId': orderId,
               'products': cartProvider.cartItems,
               'totalAmount': total,
@@ -196,16 +214,16 @@ class ProceedToCheckout extends StatelessWidget {
                 .collection('orders')
                 .doc(orderId)
                 .set(orderData);
-
             cartProvider.clearCart();
 
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (_) => const Orderpage()),
             );
-          } else {
+          } catch (e) {
+            print("Checkout Error: $e");
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Payment failed. Try again.")),
+              SnackBar(content: Text("Something went wrong: ${e.toString()}")),
             );
           }
         },

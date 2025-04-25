@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:go90stores/consts.dart';
 
@@ -10,29 +11,33 @@ class StripeService {
   Future<bool> makePayment(double totalAmount) async {
     try {
       int amountInPaisa = (totalAmount * 100).toInt();
-      String? paymentIntentClientSecret =
-          await _createPaymentIntent(amountInPaisa, "inr");
+      final clientSecret = await _createPaymentIntent(amountInPaisa, "inr");
 
-      if (paymentIntentClientSecret == null) return false;
+      if (clientSecret == null) {
+        print("Client secret was null");
+        return false;
+      }
 
       await Stripe.instance.initPaymentSheet(
         paymentSheetParameters: SetupPaymentSheetParameters(
-          paymentIntentClientSecret: paymentIntentClientSecret,
+          paymentIntentClientSecret: clientSecret,
           merchantDisplayName: "Go90Store",
+          style: ThemeMode.light, // or dark based on your app theme
         ),
       );
 
       await Stripe.instance.presentPaymentSheet();
 
+      // Optional: confirm if not auto-confirmed
+      // await Stripe.instance.confirmPaymentSheetPayment();
+
+      print("Payment successful");
       return true;
+    } on StripeException catch (e) {
+      print("Stripe error: ${e.error.code} - ${e.error.message}");
+      return false;
     } catch (e) {
-      print("Stripe payment failed: $e");
-
-      if (e is StripeException) {
-        final error = e.error;
-        print("Stripe error: ${error.code} | ${error.message}");
-      }
-
+      print("Payment failed: $e");
       return false;
     }
   }

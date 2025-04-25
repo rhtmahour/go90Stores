@@ -38,6 +38,7 @@ Future<void> _setup() async {
   if (!kIsWeb) {
     Stripe.publishableKey =
         stripePublishableKey; // Flutter Stripe not fully supported on Web
+    //await Stripe.instance.applySettings(); // ✅ Required for consistent behavior
   }
 }
 
