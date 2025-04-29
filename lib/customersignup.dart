@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go90stores/customerdashboard.dart'; // ✅ Navigate to Customer Dashboard
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 
 class CustomerSignUp extends StatefulWidget {
   const CustomerSignUp({super.key});
@@ -16,7 +17,6 @@ class _CustomerSignUpState extends State<CustomerSignUp> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   bool _isLoading = false;
   bool _passwordVisible = false;
@@ -30,6 +30,13 @@ class _CustomerSignUpState extends State<CustomerSignUp> {
     super.dispose();
   }
 
+// Password hash function
+  String hashPassword(String password) {
+    final bytes = utf8.encode(password);
+    final digest = sha256.convert(bytes);
+    return digest.toString();
+  }
+
   Future<void> _signUp() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -38,43 +45,32 @@ class _CustomerSignUpState extends State<CustomerSignUp> {
     });
 
     try {
-      // ✅ Ensure "customers" collection exists before adding data
-      final CollectionReference customerCollection =
-          _firestore.collection('customers');
+      final docRef = _firestore.collection('customers').doc();
+      final customerId = docRef.id;
 
-      // ✅ Create Customer Authentication
-      UserCredential userCredential =
-          await _auth.createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
+      final hashedPassword = hashPassword(_passwordController.text.trim());
 
-      final String customerId = userCredential.user!.uid;
-
-      // ✅ Add Customer Data in Firestore
-      await customerCollection.doc(customerId).set({
-        'id': customerId, // Store user ID
+      await docRef.set({
+        'id': customerId,
         'name': _nameController.text.trim(),
         'phoneNumber': _phoneController.text.trim(),
         'email': _emailController.text.trim(),
+        'password': hashedPassword,
         'createdAt': FieldValue.serverTimestamp(),
       });
 
-      // ✅ Navigate to Customer Dashboard
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const Customerdashboard()),
       );
-    } on FirebaseAuthException catch (e) {
-      String errorMessage = "An error occurred. Please try again.";
-      if (e.code == 'email-already-in-use') {
-        errorMessage = "This email is already in use.";
-      } else if (e.code == 'weak-password') {
-        errorMessage = "The password is too weak.";
-      }
+    } catch (e) {
+      debugPrint("Signup error: $e"); // Logs full error for debugging
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text("Error: $e"), // Show actual error to user (for now)
+          backgroundColor: Colors.red,
+        ),
       );
     } finally {
       setState(() {

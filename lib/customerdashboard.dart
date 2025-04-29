@@ -58,12 +58,12 @@ class _CustomerdashboardState extends State<Customerdashboard> {
 
     if (currentUser != null) {
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('customers') // Change this collection name if necessary
+          .collection('customers')
           .doc(currentUser.uid)
           .get();
-
       if (userDoc.exists) {
         setState(() {
+          user = currentUser; // ✅ FIX: Assign the user for email display
           name = userDoc['name'] ?? 'No name available';
           phoneNumber = userDoc['phoneNumber'] ?? 'No phone number available';
           email = currentUser.email;

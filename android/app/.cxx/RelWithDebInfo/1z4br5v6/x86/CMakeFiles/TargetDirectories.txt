@@ -1,0 +1,2 @@
+C:/Users/Admin/Desktop/go90Stores/android/app/.cxx/RelWithDebInfo/1z4br5v6/x86/CMakeFiles/edit_cache.dir
+C:/Users/Admin/Desktop/go90Stores/android/app/.cxx/RelWithDebInfo/1z4br5v6/x86/CMakeFiles/rebuild_cache.dir

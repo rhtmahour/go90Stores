@@ -6,6 +6,8 @@ import 'package:go90stores/customerdashboard.dart';
 import 'package:go90stores/customersignup.dart';
 import 'package:go90stores/mystore.dart';
 import 'package:go90stores/store_registration.dart';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 
 class AdminLogin extends StatefulWidget {
   const AdminLogin({super.key});
@@ -60,7 +62,6 @@ class _AdminLoginState extends State<AdminLogin> {
         // ✅ Store Login
         final email = _emailController.text.trim();
         final password = _passwordController.text.trim();
-
         final querySnapshot = await _firestore
             .collection('stores')
             .where('email', isEqualTo: email)
@@ -78,16 +79,27 @@ class _AdminLoginState extends State<AdminLogin> {
           throw Exception('Invalid email or password for Store Login.');
         }
       } else if (_selectedRole == 'Customer') {
-        // ✅ Customer Login
-        UserCredential userCredential2 = await _auth.signInWithEmailAndPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
-        );
+        final email = _emailController.text.trim();
+        final password = _passwordController.text.trim();
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const Customerdashboard()),
-        );
+        // Hash the entered password
+        final hashedPassword = sha256.convert(utf8.encode(password)).toString();
+
+        final querySnapshot = await _firestore
+            .collection('customers')
+            .where('email', isEqualTo: email)
+            .where('password', isEqualTo: hashedPassword)
+            .get();
+
+        if (querySnapshot.docs.isNotEmpty) {
+          final customerId = querySnapshot.docs.first.id;
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const Customerdashboard()),
+          );
+        } else {
+          throw Exception('Invalid email or password for Customer Login.');
+        }
       }
     } on FirebaseAuthException catch (e) {
       String errorMessage = "An error occurred. Please try again.";
