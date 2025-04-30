@@ -31,7 +31,6 @@ class _CustomerdashboardState extends State<Customerdashboard> {
   User? user;
   String? name;
   String? phoneNumber;
-  String? email;
   bool _isLoggedIn = false;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -54,22 +53,34 @@ class _CustomerdashboardState extends State<Customerdashboard> {
   }
 
   Future<void> _fetchUserData() async {
-    User? currentUser = _auth.currentUser;
+    try {
+      final currentUser = _auth.currentUser;
 
-    if (currentUser != null) {
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('customers')
-          .doc(currentUser.uid)
-          .get();
-      if (userDoc.exists) {
-        setState(() {
-          user = currentUser; // ✅ FIX: Assign the user for email display
-          name = userDoc['name'] ?? 'No name available';
-          phoneNumber = userDoc['phoneNumber'] ?? 'No phone number available';
-          email = currentUser.email;
-          _isLoggedIn = true;
-        });
+      if (currentUser != null) {
+        final userDoc = await FirebaseFirestore.instance
+            .collection('customers')
+            .doc(currentUser.uid)
+            .get();
+
+        if (userDoc.exists) {
+          final data = userDoc.data();
+          if (data != null) {
+            setState(() {
+              user = currentUser;
+              name = data['name']?.toString() ?? 'No name available';
+              phoneNumber = data['phoneNumber']?.toString() ??
+                  'No phone number available';
+              _isLoggedIn = true;
+            });
+          }
+        } else {
+          print('User document does not exist in Firestore.');
+        }
+      } else {
+        print('User not logged in.');
       }
+    } catch (e) {
+      print('Error fetching user data: $e');
     }
   }
 
@@ -107,16 +118,20 @@ class _CustomerdashboardState extends State<Customerdashboard> {
               height: 350,
               width: double.maxFinite,
               child: DrawerHeader(
-                decoration: BoxDecoration(
-                  color: Colors.blue,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blueAccent, Colors.purpleAccent],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.only(left: 200, bottom: 30),
+                    Align(
+                      alignment: Alignment.topRight,
                       child: IconButton(
-                        icon: Icon(Icons.edit, color: Colors.white),
+                        icon: const Icon(Icons.edit, color: Colors.white),
                         onPressed: () {
                           // Add edit profile logic here
                         },
@@ -129,34 +144,29 @@ class _CustomerdashboardState extends State<Customerdashboard> {
                         backgroundImage: pickedImageFile != null
                             ? FileImage(pickedImageFile!)
                             : null,
+                        backgroundColor: Colors.grey[200],
                         child: pickedImageFile == null
                             ? Icon(Icons.camera_alt,
                                 size: 40, color: Colors.grey[600])
                             : null,
-                        backgroundColor: Colors.grey[200],
                       ),
                     ),
+                    const SizedBox(height: 12),
                     Text(
                       _isLoggedIn && name != null && name!.isNotEmpty
                           ? name!
-                          : 'No name available',
-                      style: TextStyle(color: Colors.white, fontSize: 20),
+                          : 'Name not available',
+                      style: const TextStyle(color: Colors.white, fontSize: 20),
                     ),
                     Text(
                       _isLoggedIn &&
                               phoneNumber != null &&
                               phoneNumber!.isNotEmpty
                           ? phoneNumber!
-                          : 'No phone number available',
-                      style: TextStyle(color: Colors.white, fontSize: 15),
+                          : 'Phone not available',
+                      style:
+                          const TextStyle(color: Colors.white70, fontSize: 15),
                     ),
-                    if (_isLoggedIn && user != null && user!.email != null)
-                      Text(
-                        user!.email!,
-                        style: const TextStyle(
-                            color: Color.fromARGB(255, 255, 255, 255),
-                            fontSize: 15),
-                      ),
                   ],
                 ),
               ),
@@ -277,7 +287,6 @@ class _CustomerdashboardState extends State<Customerdashboard> {
                     _isLoggedIn = false;
                     name = null;
                     phoneNumber = null;
-                    email = null;
                   });
                 },
               )

@@ -81,25 +81,24 @@ class _AdminLoginState extends State<AdminLogin> {
       } else if (_selectedRole == 'Customer') {
         final email = _emailController.text.trim();
         final password = _passwordController.text.trim();
-
-        // Hash the entered password
-        final hashedPassword = sha256.convert(utf8.encode(password)).toString();
-
         final querySnapshot = await _firestore
             .collection('customers')
             .where('email', isEqualTo: email)
-            .where('password', isEqualTo: hashedPassword)
+            .where('password', isEqualTo: password)
             .get();
 
-        if (querySnapshot.docs.isNotEmpty) {
-          final customerId = querySnapshot.docs.first.id;
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const Customerdashboard()),
-          );
-        } else {
-          throw Exception('Invalid email or password for Customer Login.');
-        }
+        // Sign in the user to Firebase Auth to set currentUser
+        UserCredential credential = await _auth.signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const Customerdashboard()),
+        );
+      } else {
+        throw Exception('Invalid email or password for Customer Login.');
       }
     } on FirebaseAuthException catch (e) {
       String errorMessage = "An error occurred. Please try again.";

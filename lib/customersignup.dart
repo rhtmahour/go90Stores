@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go90stores/customerdashboard.dart'; // ✅ Navigate to Customer Dashboard
@@ -45,30 +46,38 @@ class _CustomerSignUpState extends State<CustomerSignUp> {
     });
 
     try {
-      final docRef = _firestore.collection('customers').doc();
-      final customerId = docRef.id;
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
 
-      final hashedPassword = hashPassword(_passwordController.text.trim());
+      // ✅ 1. Create Firebase Auth account
+      final authResult = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: password);
 
-      await docRef.set({
-        'id': customerId,
+      final uid = authResult.user!.uid;
+
+      // ✅ 2. Save additional user data to Firestore
+      await _firestore.collection('customers').doc(uid).set({
+        'id': uid,
         'name': _nameController.text.trim(),
         'phoneNumber': _phoneController.text.trim(),
-        'email': _emailController.text.trim(),
-        'password': hashedPassword,
+        'email': email,
+        'password': sha256
+            .convert(utf8.encode(password))
+            .toString(), // optional hashed storage
         'createdAt': FieldValue.serverTimestamp(),
       });
 
+      // ✅ 3. Navigate to dashboard
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const Customerdashboard()),
       );
     } catch (e) {
-      debugPrint("Signup error: $e"); // Logs full error for debugging
+      debugPrint("Signup error: $e");
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Error: $e"), // Show actual error to user (for now)
+          content: Text("Error: $e"),
           backgroundColor: Colors.red,
         ),
       );
