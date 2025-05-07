@@ -150,7 +150,9 @@ class _NotificationScreenState extends State<Adminnotificationscreen> {
                     title: Text(
                       storeName,
                       style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 16),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          color: Colors.purple),
                     ),
                     subtitle: Text(
                       product['name'] ?? 'Unknown Product',

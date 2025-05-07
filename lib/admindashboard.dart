@@ -244,6 +244,15 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Store List Section
+                    Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: Text('Stores',
+                          style: TextStyle(
+                            fontSize: fontSize,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.purple,
+                          )),
+                    ),
                     SizedBox(
                       width: isWideScreen ? screenWidth * 0.65 : screenWidth,
                       child: StreamBuilder<QuerySnapshot>(

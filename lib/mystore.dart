@@ -399,7 +399,7 @@ class MyStoreState extends State<MyStore> {
           padding: EdgeInsets.zero,
           children: [
             StoreDrawerHeader(storeId: widget.storeId),
-            const ListTile(
+            ListTile(
               iconColor: Colors.blue,
               textColor: Colors.purple,
               leading: Icon(
@@ -410,6 +410,71 @@ class MyStoreState extends State<MyStore> {
                 'Home',
                 style: TextStyle(fontSize: 20),
               ),
+              onTap: () {},
+            ),
+            Divider(),
+            ListTile(
+              iconColor: Colors.blue,
+              textColor: Colors.purple,
+              leading: Icon(Icons.location_on),
+              title: const Text(
+                'Addresses',
+                style: TextStyle(fontWeight: FontWeight.w500),
+              ),
+              onTap: () {},
+            ),
+            Divider(),
+            ListTile(
+              iconColor: Colors.blue,
+              textColor: Colors.purple,
+              leading: Icon(Icons.support_agent),
+              title: const Text(
+                'Support',
+                style: TextStyle(fontWeight: FontWeight.w500),
+              ),
+              onTap: () {},
+            ),
+            Divider(),
+            ListTile(
+              iconColor: Colors.blue,
+              textColor: Colors.purple,
+              leading: Icon(Icons.settings),
+              title: const Text(
+                'Settings',
+                style: TextStyle(fontWeight: FontWeight.w500),
+              ),
+              onTap: () {},
+            ),
+            Divider(),
+            ListTile(
+              iconColor: Colors.blue,
+              textColor: Colors.purple,
+              leading: Icon(Icons.notification_add),
+              title: const Text(
+                'Notifications',
+                style: TextStyle(fontWeight: FontWeight.w500),
+              ),
+              onTap: () {},
+            ),
+            Divider(),
+            ListTile(
+                title: Text(
+              "FAQ's",
+              style: TextStyle(fontWeight: FontWeight.w500),
+            )),
+            ListTile(
+              title: const Text(
+                'Privacy Policy',
+                style: TextStyle(fontWeight: FontWeight.w500),
+              ),
+              onTap: () {},
+            ),
+            ListTile(
+              title: const Text(
+                'Send feedback',
+                style: TextStyle(fontWeight: FontWeight.w500),
+              ),
+              onTap: () {},
             ),
           ],
         ),
@@ -455,10 +520,10 @@ class MyStoreState extends State<MyStore> {
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius:
-                            BorderRadius.circular(20), // Add rounded corners
+                            BorderRadius.circular(10), // Add rounded corners
                         borderSide: BorderSide(
                             color: Colors.purple,
-                            width: 2), // Border color when not focused
+                            width: 1), // Border color when not focused
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius:
