@@ -6,8 +6,6 @@ import 'package:go90stores/customerdashboard.dart';
 import 'package:go90stores/customersignup.dart';
 import 'package:go90stores/mystore.dart';
 import 'package:go90stores/store_registration.dart';
-import 'dart:convert';
-import 'package:crypto/crypto.dart';
 
 class AdminLogin extends StatefulWidget {
   const AdminLogin({super.key});
@@ -46,7 +44,7 @@ class _AdminLoginState extends State<AdminLogin> {
     try {
       if (_selectedRole == 'Admin') {
         // ✅ Admin Login
-        UserCredential userCredential1 = await _auth.signInWithEmailAndPassword(
+        UserCredential userCredential = await _auth.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
@@ -150,6 +148,7 @@ class _AdminLoginState extends State<AdminLogin> {
               children: [
                 // ✅ Add Role Selection
                 DropdownButton<String>(
+                  dropdownColor: Colors.grey,
                   value: _selectedRole,
                   iconEnabledColor: Colors.white,
                   onChanged: (value) {
@@ -162,21 +161,21 @@ class _AdminLoginState extends State<AdminLogin> {
                       value: 'Admin',
                       child: Text(
                         'Admin Login',
-                        style: TextStyle(color: Colors.purple),
+                        style: TextStyle(color: Colors.white),
                       ),
                     ),
                     DropdownMenuItem(
                       value: 'Store',
                       child: Text(
                         'Store Login',
-                        style: TextStyle(color: Colors.purple),
+                        style: TextStyle(color: Colors.white),
                       ),
                     ),
                     DropdownMenuItem(
                       value: 'Customer',
                       child: Text(
                         'Customer Login',
-                        style: TextStyle(color: Colors.purple),
+                        style: TextStyle(color: Colors.white),
                       ),
                     ),
                   ],
