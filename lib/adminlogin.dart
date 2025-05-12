@@ -148,7 +148,7 @@ class _AdminLoginState extends State<AdminLogin> {
               children: [
                 // ✅ Add Role Selection
                 DropdownButton<String>(
-                  dropdownColor: Colors.grey,
+                  dropdownColor: Colors.transparent,
                   value: _selectedRole,
                   iconEnabledColor: Colors.white,
                   onChanged: (value) {
