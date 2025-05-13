@@ -239,221 +239,233 @@ class _AdminDashboardState extends State<AdminDashboard> {
             const Divider(height: 20, thickness: 2),
             LayoutBuilder(
               builder: (context, constraints) {
-                return Flex(
-                  direction: isWideScreen ? Axis.horizontal : Axis.vertical,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Store List Section
-                    Padding(
-                      padding: const EdgeInsets.all(10.0),
-                      child: Text('Stores',
-                          style: TextStyle(
-                            fontSize: fontSize,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.purple,
-                          )),
-                    ),
-                    SizedBox(
-                      width: isWideScreen ? screenWidth * 0.65 : screenWidth,
-                      child: StreamBuilder<QuerySnapshot>(
-                        stream: FirebaseFirestore.instance
-                            .collection('stores')
-                            .snapshots(),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const Center(
-                                child: CircularProgressIndicator());
-                          }
+                return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: ConstrainedBox(
+                      constraints:
+                          BoxConstraints(minWidth: constraints.maxWidth),
+                      child: Flex(
+                        direction:
+                            isWideScreen ? Axis.horizontal : Axis.vertical,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Store List Section
+                          SizedBox(
+                            width:
+                                isWideScreen ? screenWidth * 0.60 : screenWidth,
+                            child: StreamBuilder<QuerySnapshot>(
+                              stream: FirebaseFirestore.instance
+                                  .collection('stores')
+                                  .snapshots(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return const Center(
+                                      child: CircularProgressIndicator());
+                                }
 
-                          if (snapshot.hasError) {
-                            return const Center(
-                                child: Text('Error loading store data.'));
-                          }
+                                if (snapshot.hasError) {
+                                  return const Center(
+                                      child: Text('Error loading store data.'));
+                                }
 
-                          if (!snapshot.hasData ||
-                              snapshot.data!.docs.isEmpty) {
-                            return const Center(
-                                child: Text('No stores available.'));
-                          }
+                                if (!snapshot.hasData ||
+                                    snapshot.data!.docs.isEmpty) {
+                                  return const Center(
+                                      child: Text('No stores available.'));
+                                }
 
-                          final storeDocs = snapshot.data!.docs;
+                                final storeDocs = snapshot.data!.docs;
 
-                          return ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: storeDocs.length,
-                            itemBuilder: (context, index) {
-                              final store = storeDocs[index];
-                              final data = store.data() as Map<String, dynamic>;
+                                return ListView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: storeDocs.length,
+                                  itemBuilder: (context, index) {
+                                    final store = storeDocs[index];
+                                    final data =
+                                        store.data() as Map<String, dynamic>;
 
-                              final imageUrl = data['storeImage'];
-                              final storename = data['storename'] ?? 'N/A';
-                              final gstNumber = data['gstNumber'] ?? 'N/A';
+                                    final imageUrl = data['storeImage'];
+                                    final storename =
+                                        data['storename'] ?? 'N/A';
+                                    final gstNumber =
+                                        data['gstNumber'] ?? 'N/A';
 
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12.0, vertical: 8.0),
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.easeInOut,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(20),
-                                    //color: Colors.grey,
-                                    gradient: const LinearGradient(
-                                      colors: [
-                                        Colors.purpleAccent,
-                                        Colors.deepPurple,
-                                      ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.15),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 6),
-                                      ),
-                                    ],
-                                  ),
-                                  child: ListTile(
-                                    onTap: () => showStoreDetailsDialog(
-                                        context, store.id),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 16, vertical: 12),
-                                    leading: CircleAvatar(
-                                      radius: 35,
-                                      backgroundColor: Colors.purple,
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(35),
-                                        child: imageUrl.isNotEmpty
-                                            ? Image.network(
-                                                imageUrl,
-                                                width: 70,
-                                                height: 70,
-                                                fit: BoxFit.cover,
-                                                errorBuilder: (context, error,
-                                                        stackTrace) =>
-                                                    _buildPlaceholder(),
-                                              )
-                                            : _buildShimmerAvatar(),
-                                      ),
-                                    ),
-                                    title: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            storename,
-                                            style: const TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.w600,
-                                              color: Colors.white,
-                                              letterSpacing: 0.5,
-                                            ),
-                                            overflow: TextOverflow.ellipsis,
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12.0, vertical: 8.0),
+                                      child: AnimatedContainer(
+                                        duration:
+                                            const Duration(milliseconds: 300),
+                                        curve: Curves.easeInOut,
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                          //color: Colors.grey,
+                                          gradient: const LinearGradient(
+                                            colors: [
+                                              Colors.purpleAccent,
+                                              Colors.deepPurple,
+                                            ],
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
                                           ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black
+                                                  .withOpacity(0.15),
+                                              blurRadius: 10,
+                                              offset: const Offset(0, 6),
+                                            ),
+                                          ],
                                         ),
-                                        const SizedBox(width: 8),
-                                        _buildStatusIcon(data['status']),
-                                      ],
-                                    ),
-                                    subtitle: Text(
-                                      'GST: $gstNumber',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.white.withOpacity(0.9),
+                                        child: ListTile(
+                                          onTap: () => showStoreDetailsDialog(
+                                              context, store.id),
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                  horizontal: 16, vertical: 12),
+                                          leading: CircleAvatar(
+                                            radius: 35,
+                                            backgroundColor: Colors.purple,
+                                            child: ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(35),
+                                              child: imageUrl.isNotEmpty
+                                                  ? Image.network(
+                                                      imageUrl,
+                                                      width: 70,
+                                                      height: 70,
+                                                      fit: BoxFit.cover,
+                                                      errorBuilder: (context,
+                                                              error,
+                                                              stackTrace) =>
+                                                          _buildPlaceholder(),
+                                                    )
+                                                  : _buildShimmerAvatar(),
+                                            ),
+                                          ),
+                                          title: Row(
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  storename,
+                                                  style: const TextStyle(
+                                                    fontSize: 20,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Colors.white,
+                                                    letterSpacing: 0.5,
+                                                  ),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              _buildStatusIcon(data['status']),
+                                            ],
+                                          ),
+                                          subtitle: Text(
+                                            'GST: $gstNumber',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color:
+                                                  Colors.white.withOpacity(0.9),
+                                            ),
+                                          ),
+                                          trailing: _buildPopupMenu(store.id),
+                                        ),
                                       ),
-                                    ),
-                                    trailing: _buildPopupMenu(store.id),
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      ),
-                    ),
-
-                    const Divider(height: 20, thickness: 2),
-                    // Right Panel
-                    SizedBox(
-                      width: isWideScreen ? screenWidth * 0.35 : screenWidth,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          children: [
-                            InkWell(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        LowestPurchasePriceReport(),
-                                  ),
+                                    );
+                                  },
                                 );
                               },
-                              borderRadius: BorderRadius.circular(16),
-                              child: Ink(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      Colors.purpleAccent,
-                                      Colors.deepPurple
-                                    ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
-                                  borderRadius: BorderRadius.circular(16),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.purple.withOpacity(0.4),
-                                      blurRadius: 10,
-                                      offset: Offset(0, 4),
+                            ),
+                          ),
+
+                          const Divider(height: 20, thickness: 2),
+                          // Right Panel
+                          SizedBox(
+                            width:
+                                isWideScreen ? screenWidth * 0.38 : screenWidth,
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                children: [
+                                  InkWell(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              LowestPurchasePriceReport(),
+                                        ),
+                                      );
+                                    },
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: Ink(
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Colors.purpleAccent,
+                                            Colors.deepPurple
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        ),
+                                        borderRadius: BorderRadius.circular(16),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color:
+                                                Colors.purple.withOpacity(0.4),
+                                            blurRadius: 10,
+                                            offset: Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 18, horizontal: 26),
+                                        child: const Text(
+                                          'Lowest Purchase Price Report',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                            letterSpacing: 0.5,
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                  ],
-                                ),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 18, horizontal: 26),
-                                  child: const Text(
-                                    'Lowest Purchase Price Report',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      letterSpacing: 0.5,
-                                    ),
                                   ),
-                                ),
+                                  const SizedBox(height: 16),
+                                  _buildActivityCard(
+                                    title: "Total Sales",
+                                    value: "\$.12,345",
+                                    icon: Icons.attach_money,
+                                    color: Colors.green,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  _buildActivityCard(
+                                    title: "Total Products",
+                                    value: "235",
+                                    icon: Icons.inventory,
+                                    color: Colors.blue,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  _buildActivityCard(
+                                    title: "Total Revenue",
+                                    value: "\$50,000",
+                                    icon: Icons.bar_chart,
+                                    color: Colors.red,
+                                  ),
+                                ],
                               ),
                             ),
-                            const SizedBox(height: 16),
-                            _buildActivityCard(
-                              title: "Total Sales",
-                              value: "\$.12,345",
-                              icon: Icons.attach_money,
-                              color: Colors.green,
-                            ),
-                            const SizedBox(height: 16),
-                            _buildActivityCard(
-                              title: "Total Products",
-                              value: "235",
-                              icon: Icons.inventory,
-                              color: Colors.blue,
-                            ),
-                            const SizedBox(height: 16),
-                            _buildActivityCard(
-                              title: "Total Revenue",
-                              value: "\$50,000",
-                              icon: Icons.bar_chart,
-                              color: Colors.red,
-                            ),
-                          ],
-                        ),
+                          )
+                        ],
                       ),
-                    )
-                  ],
-                );
+                    ));
               },
             ),
           ],
