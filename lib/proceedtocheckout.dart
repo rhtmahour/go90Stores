@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:go90stores/googlemap.dart';
 import 'package:go90stores/orderpage.dart';
 import 'package:go90stores/services/stripe_service.dart';
 import 'package:provider/provider.dart';
@@ -35,7 +36,7 @@ class ProceedToCheckout extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildSectionTitle("Shipping Address"),
-              _buildAddressCard(),
+              _buildAddressCard(context),
               _buildSectionTitle("Order Summary"),
               _buildOrderSummary(cartProvider),
               _buildSectionTitle("Payment Method"),
@@ -62,23 +63,29 @@ class ProceedToCheckout extends StatelessWidget {
     );
   }
 
-  Widget _buildAddressCard() {
+  Widget _buildAddressCard(BuildContext context) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         onTap: () {
-          // Add address selection logic here
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  GoogleMapScreen(), // Replace with your map screen
+            ),
+          );
         },
-        leading: Icon(Icons.location_on,
-            color: const Color.fromARGB(255, 176, 120, 120), size: 28),
-        title: Text(
-          "KH No. 91, Bijwasan Road, Kapashera, Gurgaon Road, New Delhi 110037",
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(color: Colors.grey[700]),
+        leading: Icon(
+          Icons.location_on,
+          color: Colors.purple,
+          size: 30,
         ),
-        trailing: Icon(Icons.edit, color: Colors.blueAccent),
+        title: Text(
+          "Select Address",
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
       ),
     );
   }
