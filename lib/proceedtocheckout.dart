@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:go90stores/googlemap.dart';
+import 'package:go90stores/customer_current_location.dart';
 import 'package:go90stores/orderpage.dart';
 import 'package:go90stores/services/stripe_service.dart';
 import 'package:provider/provider.dart';
@@ -73,7 +73,7 @@ class ProceedToCheckout extends StatelessWidget {
             context,
             MaterialPageRoute(
               builder: (context) =>
-                  GoogleMapScreen(), // Replace with your map screen
+                  CustomerCurrentLocation(), // Replace with your map screen
             ),
           );
         },
