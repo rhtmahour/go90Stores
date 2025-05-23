@@ -1,9 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:go90stores/customer_current_location.dart';
 import 'package:go90stores/orderpage.dart';
 import 'package:go90stores/services/stripe_service.dart';
+import 'package:go90stores/user_current_location.dart';
 import 'package:provider/provider.dart';
 import 'cart_provider.dart';
 
