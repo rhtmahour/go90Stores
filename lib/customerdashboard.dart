@@ -6,6 +6,7 @@ import 'package:go90stores/adminlogin.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go90stores/brandpage.dart';
 import 'package:go90stores/category.dart';
+import 'package:go90stores/customeraddress.dart';
 import 'package:go90stores/customernotification.dart';
 import 'package:go90stores/customersettings.dart';
 import 'package:go90stores/homebottombar.dart';
@@ -190,10 +191,17 @@ class _CustomerdashboardState extends State<Customerdashboard> {
             ListTile(
               leading: Icon(Icons.location_on),
               title: const Text(
-                'Addresses',
+                'Address',
                 style: TextStyle(fontWeight: FontWeight.w500),
               ),
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const Customeraddress(),
+                  ),
+                );
+              },
             ),
             Divider(),
             ListTile(
