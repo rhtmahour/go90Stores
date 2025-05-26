@@ -13,6 +13,7 @@ class Customeraddress extends StatefulWidget {
 class _CustomeraddressState extends State<Customeraddress> {
   String? address;
   bool isLoading = true;
+  Map<String, dynamic>? addressData;
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -25,27 +26,42 @@ class _CustomeraddressState extends State<Customeraddress> {
       if (uid != null) {
         final doc = await _firestore.collection('customers').doc(uid).get();
 
-        setState(() {
-          address = doc.exists && doc.data()!.containsKey('address')
-              ? doc['address']
-              : null;
-        });
+        if (doc.exists && doc.data() != null) {
+          setState(() {
+            addressData = {
+              'address': doc['address'],
+              'locality': doc['locality'],
+              'city': doc['city'],
+              'pincode': doc['pincode'],
+              'state': doc['state'],
+              'addressType': doc['addressType'],
+            };
+          });
+        }
       }
     } catch (e) {
       print('Error fetching address: $e');
-      setState(() => address = null);
+      setState(() => addressData = null);
     } finally {
       setState(() => isLoading = false);
     }
   }
 
   Future<void> removeAddress() async {
+    final context = this.context;
+
     final uid = _auth.currentUser?.uid;
     if (uid != null) {
       await _firestore.collection('customers').doc(uid).update({
         'address': FieldValue.delete(),
       });
       await fetchAddress();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Remove the Address Successfully"),
+          backgroundColor: Colors.green,
+        ),
+      );
     }
   }
 
@@ -83,6 +99,12 @@ class _CustomeraddressState extends State<Customeraddress> {
                         .update({'address': newAddress});
                     Navigator.of(context).pop();
                     await fetchAddress();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Remove the Address Successfully"),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
                   }
                 }
               },
@@ -240,10 +262,13 @@ class _CustomeraddressState extends State<Customeraddress> {
                                     ElevatedButton.icon(
                                       onPressed: () {
                                         ScaffoldMessenger.of(context)
-                                            .showSnackBar(const SnackBar(
-                                          content:
-                                              Text("No address to remove."),
-                                        ));
+                                            .showSnackBar(
+                                          const SnackBar(
+                                            content:
+                                                Text("Add the Address First"),
+                                            backgroundColor: Colors.orange,
+                                          ),
+                                        );
                                       },
                                       icon: const Icon(
                                         Icons.delete_outline,

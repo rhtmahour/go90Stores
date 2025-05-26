@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class EditAddressPage extends StatefulWidget {
@@ -6,22 +8,57 @@ class EditAddressPage extends StatefulWidget {
 }
 
 class _EditAddressPageState extends State<EditAddressPage> {
-  bool isDefaultAddress = true;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  final _pincodeController = TextEditingController();
+  final _stateController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _localityController = TextEditingController();
+  final _cityController = TextEditingController();
+
   String selectedAddressType = "Home";
+  bool isDefaultAddress = true;
+
+  void _saveAddress() async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return;
+
+    if (_pincodeController.text.isEmpty ||
+        _stateController.text.isEmpty ||
+        _addressController.text.isEmpty ||
+        _localityController.text.isEmpty ||
+        _cityController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Please fill all the fields.")),
+      );
+      return;
+    }
+
+    final addressData = {
+      "address": _addressController.text.trim(),
+      "locality": _localityController.text.trim(),
+      "city": _cityController.text.trim(),
+      "pincode": _pincodeController.text.trim(),
+      "state": _stateController.text.trim(),
+      "addressType": selectedAddressType,
+      "isDefault": isDefaultAddress,
+    };
+
+    await _firestore.collection('customers').doc(uid).set(
+      {"address": addressData},
+      SetOptions(merge: true),
+    );
+
+    Navigator.pop(context); // Go back after saving
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      //backgroundColor: Colors.grey[100],
       appBar: AppBar(
         elevation: 2,
-        title: Text(
-          "Edit Address",
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
+        title: Text("Edit Address", style: TextStyle(color: Colors.white)),
         centerTitle: true,
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
@@ -38,67 +75,57 @@ class _EditAddressPageState extends State<EditAddressPage> {
         ),
       ),
       body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text("Address Details",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              SizedBox(height: 20),
-              _buildTextField("Full Name", required: true),
-              SizedBox(height: 16),
-              _buildTextField("Mobile Number", required: true),
-              SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(child: _buildTextField("Pincode", required: true)),
-                  SizedBox(width: 16),
-                  Expanded(child: _buildTextField("State", required: true)),
-                ],
-              ),
-              SizedBox(height: 16),
-              _buildTextField("Address (House No, Street, Area)",
-                  required: true),
-              SizedBox(height: 16),
-              _buildTextField("Locality/Town", required: true),
-              SizedBox(height: 16),
-              _buildTextField("City/District", required: true),
-              SizedBox(height: 20),
-              Text("Address Type",
-                  style: TextStyle(fontWeight: FontWeight.w600)),
-              Row(
-                children: [
-                  _buildRadioOption("Home"),
-                  SizedBox(width: 16),
-                  _buildRadioOption("Office"),
-                ],
-              ),
-              SizedBox(height: 10),
-              CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
-                value: isDefaultAddress,
-                onChanged: (val) {
-                  setState(() => isDefaultAddress = val!);
-                },
-                title: Text("Set as default address"),
-                controlAffinity: ListTileControlAffinity.leading,
-                activeColor: Colors.purple,
-              ),
-            ],
-          ),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Address Details",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            SizedBox(height: 16),
+            _buildTextField(
+                "Address (House No, Street, Area)", _addressController),
+            SizedBox(height: 16),
+            _buildTextField("Locality/Town", _localityController),
+            SizedBox(height: 16),
+            _buildTextField("City/District", _cityController),
+            SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(child: _buildTextField("Pincode", _pincodeController)),
+                SizedBox(width: 16),
+                Expanded(child: _buildTextField("State", _stateController)),
+              ],
+            ),
+            SizedBox(height: 20),
+            Text("Address Type", style: TextStyle(fontWeight: FontWeight.w600)),
+            Row(
+              children: [
+                _buildRadioOption("Home"),
+                SizedBox(width: 16),
+                _buildRadioOption("Office"),
+              ],
+            ),
+            SizedBox(height: 10),
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              value: isDefaultAddress,
+              onChanged: (val) => setState(() => isDefaultAddress = val!),
+              title: Text("Set as default address"),
+              controlAffinity: ListTileControlAffinity.leading,
+              activeColor: Colors.purple,
+            ),
+          ],
         ),
       ),
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Row(
           children: [
             Expanded(
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple,
-                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.grey,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                 ),
@@ -111,7 +138,7 @@ class _EditAddressPageState extends State<EditAddressPage> {
             SizedBox(width: 16),
             Expanded(
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: _saveAddress,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.purple,
                   foregroundColor: Colors.white,
@@ -130,11 +157,11 @@ class _EditAddressPageState extends State<EditAddressPage> {
     );
   }
 
-  Widget _buildTextField(String label,
-      {bool required = false, String? errorText}) {
+  Widget _buildTextField(String label, TextEditingController controller) {
     return TextField(
+      controller: controller,
       decoration: InputDecoration(
-        labelText: "$label ${required ? '*' : ''}",
+        labelText: "$label *",
         labelStyle: TextStyle(fontWeight: FontWeight.w500),
         filled: true,
         fillColor: Colors.white,
@@ -154,9 +181,7 @@ class _EditAddressPageState extends State<EditAddressPage> {
         Radio<String>(
           value: value,
           groupValue: selectedAddressType,
-          onChanged: (val) {
-            setState(() => selectedAddressType = val!);
-          },
+          onChanged: (val) => setState(() => selectedAddressType = val!),
           activeColor: Colors.purple,
         ),
         Text(value),
