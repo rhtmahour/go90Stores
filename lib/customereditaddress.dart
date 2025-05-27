@@ -43,13 +43,19 @@ class _EditAddressPageState extends State<EditAddressPage> {
       "state": _stateController.text.trim(),
       "addressType": selectedAddressType,
       "isDefault": isDefaultAddress,
+      "timestamp": FieldValue.serverTimestamp(), // Optional for sorting
     };
 
-    await _firestore.collection('customers').doc(uid).set(
-      {"address": addressData},
-      SetOptions(merge: true),
+    await _firestore.collection('customers').doc(uid).set({
+      "addresses": FieldValue.arrayUnion([addressData])
+    }, SetOptions(merge: true));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Address saved successfully!"),
+        backgroundColor: Colors.green,
+        duration: Duration(seconds: 2),
+      ),
     );
-
     Navigator.pop(context); // Go back after saving
   }
 
