@@ -72,8 +72,7 @@ class ProceedToCheckout extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) =>
-                  CustomerCurrentLocation(), // Replace with your map screen
+              builder: (context) => CustomerCurrentLocation(),
             ),
           );
         },
