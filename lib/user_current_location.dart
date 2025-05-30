@@ -19,20 +19,35 @@ class _CustomerCurrentLocationState extends State<CustomerCurrentLocation> {
   // Store markers
   final Marker _store1 = const Marker(
     markerId: MarkerId('store1'),
-    position: LatLng(28.5522, 77.0583),
+    position: LatLng(28.528803, 77.082499),
     infoWindow: InfoWindow(title: 'Store 1'),
   );
 
   final Marker _store2 = const Marker(
     markerId: MarkerId('store2'),
-    position: LatLng(28.529782, 77.087290),
+    position: LatLng(28.534157, 77.081340),
     infoWindow: InfoWindow(title: 'Store 2'),
+  );
+  final Marker _store3 = const Marker(
+    markerId: MarkerId('store3'),
+    position: LatLng(28.529821, 77.079109),
+    infoWindow: InfoWindow(title: 'Store 3'),
+  );
+  final Marker _store4 = const Marker(
+    markerId: MarkerId('store4'),
+    position: LatLng(28.533818, 77.086447),
+    infoWindow: InfoWindow(title: 'Store 4'),
+  );
+  final Marker _go90mart = const Marker(
+    markerId: MarkerId('go90mart'),
+    position: LatLng(28.529831, 77.087220),
+    infoWindow: InfoWindow(title: 'Go90Mart'),
   );
 
   @override
   void initState() {
     super.initState();
-    _markers.addAll([_store1, _store2]);
+    _markers.addAll([_store1, _store2, _store3, _store4, _go90mart]);
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final GoogleMapController controller = await _controller.future;
@@ -86,7 +101,13 @@ class _CustomerCurrentLocationState extends State<CustomerCurrentLocation> {
       );
 
       // Store markers list
-      final List<Marker> allStoreMarkers = [_store1, _store2];
+      final List<Marker> allStoreMarkers = [
+        _store1,
+        _store2,
+        _store3,
+        _store4,
+        _go90mart
+      ];
 
       for (final storeMarker in allStoreMarkers) {
         final double distanceInMeters = Geolocator.distanceBetween(
