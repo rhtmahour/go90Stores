@@ -9,7 +9,7 @@ import 'package:go90stores/adminlogin.dart';
 import 'package:go90stores/bestprice.dart';
 import 'package:go90stores/notificationscreen.dart';
 import 'package:go90stores/productcard.dart';
-import 'package:go90stores/storecurrentlocation.dart';
+import 'package:go90stores/storeaddress.dart';
 import 'package:go90stores/storedrawerheader.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
@@ -426,7 +426,7 @@ class MyStoreState extends State<MyStore> {
                 Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => StoreCurrentLocation(
+                        builder: (context) => StoreAddress(
                             storeId: widget.storeId,
                             onLocationSelected: (String address) {
                               //Handle the selected address here

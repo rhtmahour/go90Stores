@@ -3,15 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-class CustomerCurrentLocation extends StatefulWidget {
-  const CustomerCurrentLocation({super.key});
+class UserCurrentLocation extends StatefulWidget {
+  const UserCurrentLocation({super.key});
 
   @override
-  State<CustomerCurrentLocation> createState() =>
-      _CustomerCurrentLocationState();
+  State<UserCurrentLocation> createState() => _UserCurrentLocationState();
 }
 
-class _CustomerCurrentLocationState extends State<CustomerCurrentLocation> {
+class _UserCurrentLocationState extends State<UserCurrentLocation> {
   final Completer<GoogleMapController> _controller = Completer();
   final List<Marker> _markers = [];
   final Set<Circle> _circles = {};
