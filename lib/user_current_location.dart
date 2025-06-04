@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserCurrentLocation extends StatefulWidget {
-  const UserCurrentLocation({super.key});
+  const UserCurrentLocation({Key? key}) : super(key: key);
 
   @override
   State<UserCurrentLocation> createState() => _UserCurrentLocationState();
@@ -13,170 +14,134 @@ class UserCurrentLocation extends StatefulWidget {
 class _UserCurrentLocationState extends State<UserCurrentLocation> {
   final Completer<GoogleMapController> _controller = Completer();
   final List<Marker> _markers = [];
-  final Set<Circle> _circles = {};
-
-  // Store markers
-  final Marker _store1 = const Marker(
-    markerId: MarkerId('store1'),
-    position: LatLng(28.528803, 77.082499),
-    infoWindow: InfoWindow(title: 'Store 1'),
-  );
-
-  final Marker _store2 = const Marker(
-    markerId: MarkerId('store2'),
-    position: LatLng(28.534157, 77.081340),
-    infoWindow: InfoWindow(title: 'Store 2'),
-  );
-  final Marker _store3 = const Marker(
-    markerId: MarkerId('store3'),
-    position: LatLng(28.529821, 77.079109),
-    infoWindow: InfoWindow(title: 'Store 3'),
-  );
-  final Marker _store4 = const Marker(
-    markerId: MarkerId('store4'),
-    position: LatLng(28.533818, 77.086447),
-    infoWindow: InfoWindow(title: 'Store 4'),
-  );
-  final Marker _go90mart = const Marker(
-    markerId: MarkerId('go90mart'),
-    position: LatLng(28.529831, 77.087220),
-    infoWindow: InfoWindow(title: 'Go90Mart'),
-  );
+  LatLng? _userLatLng;
 
   @override
   void initState() {
     super.initState();
-    _markers.addAll([_store1, _store2, _store3, _store4, _go90mart]);
-
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final GoogleMapController controller = await _controller.future;
-      controller.animateCamera(CameraUpdate.newLatLngZoom(
-        _store1.position,
-        14,
-      ));
-    });
+    _determinePosition();
   }
 
-  static const CameraPosition _initialCameraPosition = CameraPosition(
-    target: LatLng(20.5937, 78.9629),
-    zoom: 1,
-  );
+  Future<void> _determinePosition() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      await Geolocator.openLocationSettings();
+      return;
+    }
 
-  Future<Position> getCustomerCurrentLocation() async {
-    LocationPermission permission;
-
-    permission = await Geolocator.checkPermission();
+    LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        throw Exception("Location permissions are denied");
+        return;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      throw Exception("Location permissions are permanently denied");
+      return;
     }
 
-    return await Geolocator.getCurrentPosition();
+    final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+    _userLatLng = LatLng(position.latitude, position.longitude);
+
+    await getAllStoreMarkers();
+
+    final GoogleMapController controller = await _controller.future;
+    controller.animateCamera(CameraUpdate.newLatLngZoom(_userLatLng!, 15));
   }
 
-  Future<void> updateMapWithNearbyStores() async {
-    try {
-      final Position position = await getCustomerCurrentLocation();
-      final LatLng currentLatLng =
-          LatLng(position.latitude, position.longitude);
+  Future<void> getAllStoreMarkers() async {
+    if (_userLatLng == null) return;
 
-      final List<Marker> updatedMarkers = [];
+    final querySnapshot =
+        await FirebaseFirestore.instance.collection('stores').get();
+    final List<Marker> storeMarkers = [];
 
-      // Add current location marker
-      updatedMarkers.add(
+    for (var doc in querySnapshot.docs) {
+      final data = doc.data();
+      final double latitude = data['latitude'];
+      final double longitude = data['longitude'];
+      final String storename = data['storename'];
+
+      final double distanceInMeters = Geolocator.distanceBetween(
+        _userLatLng!.latitude,
+        _userLatLng!.longitude,
+        latitude,
+        longitude,
+      );
+
+      final hue = distanceInMeters <= 500
+          ? BitmapDescriptor.hueAzure
+          : BitmapDescriptor.hueOrange;
+
+      storeMarkers.add(
         Marker(
-          markerId: const MarkerId('current_location'),
-          position: currentLatLng,
-          infoWindow: const InfoWindow(title: 'My current location'),
-          icon:
-              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+          markerId: MarkerId(doc.id),
+          position: LatLng(latitude, longitude),
+          infoWindow: InfoWindow(
+              title: "$storename (${distanceInMeters.toStringAsFixed(0)}m)"),
+          icon: BitmapDescriptor.defaultMarkerWithHue(hue),
         ),
       );
-
-      // Store markers list
-      final List<Marker> allStoreMarkers = [
-        _store1,
-        _store2,
-        _store3,
-        _store4,
-        _go90mart
-      ];
-
-      for (final storeMarker in allStoreMarkers) {
-        final double distanceInMeters = Geolocator.distanceBetween(
-          currentLatLng.latitude,
-          currentLatLng.longitude,
-          storeMarker.position.latitude,
-          storeMarker.position.longitude,
-        );
-
-        // Highlight nearby stores, else add default
-        updatedMarkers.add(
-          Marker(
-            markerId: storeMarker.markerId,
-            position: storeMarker.position,
-            infoWindow: storeMarker.infoWindow,
-            icon: BitmapDescriptor.defaultMarkerWithHue(
-              distanceInMeters <= 500
-                  ? BitmapDescriptor.hueGreen
-                  : BitmapDescriptor.hueRed,
-            ),
-          ),
-        );
-      }
-
-      // Draw 500-meter radius circle
-      _circles.clear();
-      _circles.add(
-        Circle(
-          circleId: const CircleId("radius_circle"),
-          center: currentLatLng,
-          radius: 500,
-          strokeWidth: 2,
-          strokeColor: Colors.blueAccent,
-          fillColor: Colors.blueAccent.withOpacity(0.1),
-        ),
-      );
-
-      setState(() {
-        _markers
-          ..clear()
-          ..addAll(updatedMarkers);
-      });
-
-      final GoogleMapController controller = await _controller.future;
-      controller.animateCamera(CameraUpdate.newCameraPosition(
-        CameraPosition(target: currentLatLng, zoom: 15),
-      ));
-    } catch (e) {
-      print("Error fetching location or filtering stores: $e");
     }
+
+    setState(() {
+      _markers.addAll(storeMarkers);
+      _markers.add(
+        Marker(
+          markerId: const MarkerId("user_location"),
+          position: _userLatLng!,
+          infoWindow: const InfoWindow(title: "My Location"),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+        ),
+      );
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: GoogleMap(
-          initialCameraPosition: _initialCameraPosition,
-          markers: Set<Marker>.of(_markers),
-          circles: _circles,
-          onMapCreated: (GoogleMapController controller) {
-            _controller.complete(controller);
-          },
-          myLocationEnabled: true,
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text(
+          "Nearby Stores on Map",
+          style: TextStyle(color: Colors.white),
+        ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blueAccent, Colors.purpleAccent],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: updateMapWithNearbyStores,
-        child: const Icon(Icons.my_location),
-      ),
+      body: _userLatLng == null
+          ? const Center(child: CircularProgressIndicator())
+          : GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: _userLatLng!,
+                zoom: 15,
+              ),
+              markers: Set<Marker>.of(_markers),
+              circles: {
+                Circle(
+                  circleId: const CircleId("user_radius"),
+                  center: _userLatLng!,
+                  radius: 500,
+                  fillColor: Colors.blue.withOpacity(0.1),
+                  strokeColor: Colors.blue,
+                  strokeWidth: 2,
+                ),
+              },
+              onMapCreated: (GoogleMapController controller) {
+                _controller.complete(controller);
+              },
+              myLocationEnabled: true,
+              myLocationButtonEnabled: true,
+            ),
     );
   }
 }
