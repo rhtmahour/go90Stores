@@ -6,6 +6,7 @@ import 'package:go90stores/services/stripe_service.dart';
 import 'package:go90stores/user_current_location.dart';
 import 'package:provider/provider.dart';
 import 'cart_provider.dart';
+import 'package:geolocator/geolocator.dart';
 
 class ProceedToCheckout extends StatelessWidget {
   @override
@@ -220,8 +221,43 @@ class ProceedToCheckout extends StatelessWidget {
                 .collection('orders')
                 .doc(orderId)
                 .set(orderData);
-            cartProvider.clearCart();
 
+            // Step 1: Get user location
+            final position = await Geolocator.getCurrentPosition(
+                desiredAccuracy: LocationAccuracy.high);
+
+            // Step 2: Query all stores
+            final storeDocs =
+                await FirebaseFirestore.instance.collection('stores').get();
+
+            for (var doc in storeDocs.docs) {
+              final data = doc.data();
+              final double storeLat = data['latitude'];
+              final double storeLng = data['longitude'];
+              final double distance = Geolocator.distanceBetween(
+                  position.latitude, position.longitude, storeLat, storeLng);
+
+              // Step 3: Send notification if within 500 meters
+              if (distance <= 500) {
+                final storeId = doc.id;
+                final notification = {
+                  'orderId': orderId,
+                  'message': 'New order placed nearby!',
+                  'timestamp': FieldValue.serverTimestamp(),
+                  'distance': distance,
+                  'userLat': position.latitude,
+                  'userLng': position.longitude,
+                };
+
+                await FirebaseFirestore.instance
+                    .collection('store_notifications')
+                    .doc(storeId)
+                    .collection('notifications')
+                    .add(notification);
+              }
+            }
+
+            cartProvider.clearCart();
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (_) => const Orderpage()),
