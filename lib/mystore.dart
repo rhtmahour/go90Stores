@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go90stores/adminlogin.dart';
 import 'package:go90stores/bestprice.dart';
-import 'package:go90stores/notificationscreen.dart';
+import 'package:go90stores/stocknotificationscreen.dart';
 import 'package:go90stores/productcard.dart';
 import 'package:go90stores/storeaddress.dart';
 import 'package:go90stores/storedrawerheader.dart';

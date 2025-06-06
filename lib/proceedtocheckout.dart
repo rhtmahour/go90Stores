@@ -224,6 +224,7 @@ class ProceedToCheckout extends StatelessWidget {
 
             // Step 1: Get user location
             final position = await Geolocator.getCurrentPosition(
+                // ignore: deprecated_member_use
                 desiredAccuracy: LocationAccuracy.high);
 
             // Step 2: Query all stores
