@@ -221,12 +221,10 @@ class ProceedToCheckout extends StatelessWidget {
                 .collection('orders')
                 .doc(orderId)
                 .set(orderData);
-
             // Step 1: Get user location
             final position = await Geolocator.getCurrentPosition(
                 // ignore: deprecated_member_use
                 desiredAccuracy: LocationAccuracy.high);
-
             // Step 2: Query all stores
             final storeDocs =
                 await FirebaseFirestore.instance.collection('stores').get();
@@ -241,15 +239,45 @@ class ProceedToCheckout extends StatelessWidget {
               // Step 3: Send notification if within 500 meters
               if (distance <= 500) {
                 final storeId = doc.id;
+
+                // 🔐 Get the currently logged-in user's UID
+                final currentUser = FirebaseAuth.instance.currentUser;
+                if (currentUser == null) return;
+
+                final uid = currentUser.uid;
+
+                // 📥 Fetch customer name from Firestore (assuming collection 'customers')
+                final customerDoc = await FirebaseFirestore.instance
+                    .collection('customers')
+                    .doc(uid)
+                    .get();
+
+                final customerName =
+                    customerDoc.data()?['name'] ?? 'Unknown Customer';
+
+                final totalAmount = total; // total from cartProvider
+                final cartItems = cartProvider.cartItems;
+
+                final List<Map<String, dynamic>> items = cartItems.map((item) {
+                  return {
+                    'name': item['name'],
+                    'quantity': item['quantity'],
+                    'price':
+                        double.tryParse(item['salePrice'].toString()) ?? 0.0,
+                  };
+                }).toList();
+
                 final notification = {
                   'orderId': orderId,
+                  'customerName': customerName,
+                  'total': totalAmount,
+                  'items': items,
                   'message': 'New order placed nearby!',
                   'timestamp': FieldValue.serverTimestamp(),
                   'distance': distance,
                   'userLat': position.latitude,
                   'userLng': position.longitude,
                 };
-
                 await FirebaseFirestore.instance
                     .collection('store_notifications')
                     .doc(storeId)
@@ -261,7 +289,7 @@ class ProceedToCheckout extends StatelessWidget {
             cartProvider.clearCart();
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (_) => const Orderpage()),
+              MaterialPageRoute(builder: (_) => const OrderPage()),
             );
           } catch (e) {
             print("Checkout Error: $e");

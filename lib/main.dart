@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:go90stores/consts.dart';
+import 'package:go90stores/services/notification_service.dart';
 import 'package:go90stores/startpage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -15,20 +16,24 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await _setup();
 
+  // ✅ Initialize Firebase FIRST
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+  // ✅ Setup Stripe key if not web
   if (!kIsWeb) {
-    await _initializeNotifications(); // Notifications are not supported on Web
+    Stripe.publishableKey = stripePublishableKey;
   }
+
+  // ✅ Setup notification service after Firebase
+  await NotificationService.instance.initialize();
 
   runApp(
     ChangeNotifierProvider(
       create: (context) => CartProvider(),
-      child: MyApp(),
+      child: const MyApp(),
     ),
   );
 }
