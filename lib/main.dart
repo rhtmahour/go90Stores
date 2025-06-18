@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:go90stores/adminlogin.dart';
 import 'package:go90stores/consts.dart';
 import 'package:go90stores/services/notification_service.dart';
-import 'package:go90stores/startpage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:go90stores/cart_provider.dart';
@@ -84,7 +84,7 @@ class MyApp extends StatelessWidget {
           displaySmall: GoogleFonts.pacifico(),
         ),
       ),
-      home: OnboardingPage(), // Ensuring compatibility
+      home: AdminLogin(), // Ensuring compatibility
     );
   }
 }

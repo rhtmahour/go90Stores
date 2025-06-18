@@ -29,11 +29,23 @@ class NotificationService {
 
   Future<void> _requestPermission() async {
     final settings = await _messaging.requestPermission(
+      announcement: true,
+      carPlay: true,
+      criticalAlert: true,
+      provisional: true,
       alert: true,
       badge: true,
       sound: true,
     );
     print("Permission status: ${settings.authorizationStatus}");
+    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+      print("User granted permission");
+    } else if (settings.authorizationStatus ==
+        AuthorizationStatus.provisional) {
+      print("User granted provisional permission");
+    } else {
+      print("User declined or has not accepted permission");
+    }
   }
 
   Future<void> setupFlutterNotifications() async {
