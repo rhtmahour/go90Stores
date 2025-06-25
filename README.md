@@ -1,4 +1,4 @@
-# 🛒 go90stores - Flutter Grocery Store Platform
+# 🛒 go90stores - Online Grocery Store 
 
 `go90stores` is a multi-store, role-based Flutter grocery application designed to manage B2B and B2C operations for a grocery brand with multiple stores in a city. It supports inventory management, real-time stock updates, price tracking, order notifications, and advanced admin controls.
 
