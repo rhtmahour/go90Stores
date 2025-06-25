@@ -103,9 +103,24 @@
 - QR-based store inventory imports.
 - Voice assistant for customer ordering.
 
+## 🖼️ App Screenshot
+
+<img src="https://github.com/user-attachments/assets/0538ca3b-fa38-4613-880c-2114328b2742" alt="go90stores Screenshot" width="200"/>
+<img src="https://github.com/user-attachments/assets/818ab6f6-3bee-4100-b3f9-e80b27ca9978" alt="go90stores Screenshot" width="200"/>
+<img src="https://github.com/user-attachments/assets/fd73bbe7-3255-45bb-b732-4154b03b362e" alt="go90stores Screenshot" width="200"/>
+<img src="https://github.com/user-attachments/assets/8ae7e04e-bad5-428f-8063-41604b652cea" alt="go90stores Screenshot" width="200"/>
+<img src="https://github.com/user-attachments/assets/66a6afc7-70e9-49f6-a28b-8b3b3701e736" alt="go90stores Screenshot" width="200"/>
+<img src="https://github.com/user-attachments/assets/b6da9c5b-4491-483f-842e-6797672080b8" alt="go90stores Screenshot" width="200"/>
+<img src="https://github.com/user-attachments/assets/480a98cd-393a-42fd-a315-aedf3d4e223f" alt="go90stores Screenshot" width="200"/>
+<img src="https://github.com/user-attachments/assets/8d68258d-47af-4e6f-b183-9716f1bbb157" alt="go90stores Screenshot" width="200"/>
+
+
+
+
 ---
 
-## 📂 Folder Structure (Sample)
+## 📂 Folder Structure
+
 
 ```bash
 lib/
@@ -123,3 +138,4 @@ lib/
 ├── widgets/
 │
 ├── main.dart
+
