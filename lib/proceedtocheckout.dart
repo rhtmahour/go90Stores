@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:go90stores/orderpage.dart';
 import 'package:go90stores/services/stripe_service.dart';
@@ -169,6 +170,7 @@ class ProceedToCheckout extends StatelessWidget {
     );
   }
 
+  // Update the _buildCheckoutButton method
   Widget _buildCheckoutButton(CartProvider cartProvider, BuildContext context) {
     return Center(
       child: ElevatedButton(
@@ -207,6 +209,11 @@ class ProceedToCheckout extends StatelessWidget {
               return;
             }
 
+            // Get customer location
+            final position = await Geolocator.getCurrentPosition(
+              desiredAccuracy: LocationAccuracy.high,
+            );
+
             final orderId = DateTime.now().millisecondsSinceEpoch.toString();
             final orderData = {
               'userId': user.uid,
@@ -215,75 +222,81 @@ class ProceedToCheckout extends StatelessWidget {
               'totalAmount': total,
               'date': DateTime.now().toIso8601String(),
               'status': 'Pending',
+              'customerLat': position.latitude,
+              'customerLng': position.longitude,
             };
 
+            // Save order to Firestore
             await FirebaseFirestore.instance
                 .collection('orders')
                 .doc(orderId)
                 .set(orderData);
-            // Step 1: Get user location
-            final position = await Geolocator.getCurrentPosition(
-                // ignore: deprecated_member_use
-                desiredAccuracy: LocationAccuracy.high);
-            // Step 2: Query all stores
-            final storeDocs =
-                await FirebaseFirestore.instance.collection('stores').get();
 
-            for (var doc in storeDocs.docs) {
-              final data = doc.data();
-              final double storeLat = data['latitude'];
-              final double storeLng = data['longitude'];
-              final double distance = Geolocator.distanceBetween(
-                  position.latitude, position.longitude, storeLat, storeLng);
+            // Find nearby stores (within 5km radius) using geolocator
+            final nearbyStores = await FirebaseFirestore.instance
+                .collection('stores')
+                .where('location', isNull: false)
+                .get()
+                .then((snapshot) async {
+              List<QueryDocumentSnapshot> nearbyStores = [];
 
-              // Step 3: Send notification if within 500 meters
-              if (distance <= 500) {
-                final storeId = doc.id;
+              for (final doc in snapshot.docs) {
+                final storeLocation = doc.data()['location'];
+                if (storeLocation == null) continue;
 
-                // 🔐 Get the currently logged-in user's UID
-                final currentUser = FirebaseAuth.instance.currentUser;
-                if (currentUser == null) return;
+                final storeLat = storeLocation['latitude'];
+                final storeLng = storeLocation['longitude'];
 
-                final uid = currentUser.uid;
+                if (storeLat == null || storeLng == null) continue;
 
-                // 📥 Fetch customer name from Firestore (assuming collection 'customers')
-                final customerDoc = await FirebaseFirestore.instance
-                    .collection('customers')
-                    .doc(uid)
-                    .get();
+                final distanceInMeters = await Geolocator.distanceBetween(
+                  position.latitude,
+                  position.longitude,
+                  storeLat,
+                  storeLng,
+                );
 
-                final customerName =
-                    customerDoc.data()?['name'] ?? 'Unknown Customer';
-
-                final totalAmount = total; // total from cartProvider
-                final cartItems = cartProvider.cartItems;
-
-                final List<Map<String, dynamic>> items = cartItems.map((item) {
-                  return {
-                    'name': item['name'],
-                    'quantity': item['quantity'],
-                    'price':
-                        double.tryParse(item['salePrice'].toString()) ?? 0.0,
-                  };
-                }).toList();
-
-                final notification = {
-                  'orderId': orderId,
-                  'customerName': customerName,
-                  'total': totalAmount,
-                  'items': items,
-                  'message': 'New order placed nearby!',
-                  'timestamp': FieldValue.serverTimestamp(),
-                  'distance': distance,
-                  'userLat': position.latitude,
-                  'userLng': position.longitude,
-                };
-                await FirebaseFirestore.instance
-                    .collection('store_notifications')
-                    .doc(storeId)
-                    .collection('notifications')
-                    .add(notification);
+                // 5km radius (5000 meters)
+                if (distanceInMeters <= 5000) {
+                  nearbyStores.add(doc);
+                }
               }
+              return nearbyStores;
+            });
+
+            // Send notifications to nearby stores
+            // Update the notification sending part to convert all values to strings
+            for (final store in nearbyStores) {
+              final storeId = store.id;
+              final timestamp = DateTime.now();
+
+              final notificationData = {
+                'type': 'new_order',
+                'order_id': orderId,
+                'customer_address': 'Current Location',
+                'total_amount': total.toString(), // Convert double to string
+                'timestamp':
+                    timestamp.toIso8601String(), // Convert DateTime to string
+                'read': 'false', // Convert bool to string
+              };
+
+              await FirebaseFirestore.instance
+                  .collection('stores')
+                  .doc(storeId)
+                  .collection('notifications')
+                  .add({
+                ...notificationData,
+                'timestamp':
+                    FieldValue.serverTimestamp(), // Keep original for Firestore
+              });
+
+              // Send push notification with string-only data
+              await FirebaseMessaging.instance.subscribeToTopic(storeId);
+              await FirebaseMessaging.instance.sendMessage(
+                to: '/topics/$storeId',
+                data:
+                    notificationData, // Now properly typed as Map<String, String>
+              );
             }
 
             cartProvider.clearCart();

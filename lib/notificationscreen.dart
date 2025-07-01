@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go90stores/orderdetailscreen.dart';
+import 'package:intl/intl.dart';
 
 class NotificationScreen extends StatefulWidget {
   final String storeId;
   final List<Map<String, dynamic>> lowStockProducts;
-  final Function(int) onNotificationDeleted;
+  final List<Map<String, dynamic>> orderNotifications;
+  final Function(int, bool) onNotificationDeleted;
 
   const NotificationScreen({
     Key? key,
     required this.storeId,
     required this.lowStockProducts,
+    required this.orderNotifications,
     required this.onNotificationDeleted,
   }) : super(key: key);
 
@@ -20,28 +23,22 @@ class NotificationScreen extends StatefulWidget {
 
 class _NotificationScreenState extends State<NotificationScreen> {
   late List<Map<String, dynamic>> _localStockAlerts;
+  late List<Map<String, dynamic>> _localOrderAlerts;
 
   @override
   void initState() {
     super.initState();
     _localStockAlerts = List.from(widget.lowStockProducts);
+    _localOrderAlerts = List.from(widget.orderNotifications);
   }
 
   void _clearAllLocalNotifications() {
     setState(() {
       _localStockAlerts.clear();
+      _localOrderAlerts.clear();
     });
-    widget.onNotificationDeleted(0); // Reset count
-  }
-
-  String _detectNotificationType(Map<String, dynamic> data) {
-    if (data.containsKey('orderId') && data.containsKey('customerName')) {
-      return 'orderAlert';
-    } else if (data.containsKey('productName') && data.containsKey('message')) {
-      return 'stockAlert';
-    } else {
-      return 'unknown';
-    }
+    widget.onNotificationDeleted(0, true); // Reset order count
+    widget.onNotificationDeleted(0, false); // Reset stock count
   }
 
   @override
@@ -64,7 +61,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           ),
         ),
         actions: [
-          if (_localStockAlerts.isNotEmpty)
+          if (_localStockAlerts.isNotEmpty || _localOrderAlerts.isNotEmpty)
             TextButton(
               onPressed: _clearAllLocalNotifications,
               child: const Text(
@@ -85,7 +82,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
         builder: (context, snapshot) {
           final firestoreNotifications = snapshot.data?.docs ?? [];
 
-          if (_localStockAlerts.isEmpty && firestoreNotifications.isEmpty) {
+          if (_localStockAlerts.isEmpty &&
+              _localOrderAlerts.isEmpty &&
+              firestoreNotifications.isEmpty) {
             return const Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -107,25 +106,38 @@ class _NotificationScreenState extends State<NotificationScreen> {
                   'name': product['name'],
                   'quantity': product['quantity'],
                   'image': product['image'],
+                  'time': 'Just now',
+                }),
+            ..._localOrderAlerts.map((order) => {
+                  'type': 'localOrderAlert',
+                  'order_id': order['order_id'],
+                  'total_amount': order['total_amount'],
+                  'customer_address': order['customer_address'],
+                  'timestamp': order['timestamp'],
+                  'time': DateFormat('MMM d, h:mm a')
+                      .format(order['timestamp']?.toDate() ?? DateTime.now()),
                 }),
             ...firestoreNotifications.map((doc) {
               final data = doc.data() as Map<String, dynamic>;
               data['id'] = doc.id;
+              data['time'] = DateFormat('MMM d, h:mm a').format(
+                  (data['timeStamp'] as Timestamp?)?.toDate() ??
+                      DateTime.now());
               return data;
             }),
-          ];
+          ]..sort((a, b) => (b['timestamp'] ?? DateTime.now())
+              .compareTo(a['timestamp'] ?? DateTime.now()));
 
           return ListView.builder(
             padding: const EdgeInsets.all(10),
             itemCount: combinedNotifications.length,
             itemBuilder: (context, index) {
               final notification = combinedNotifications[index];
-              final type =
-                  notification['type'] ?? _detectNotificationType(notification);
+              final type = notification['type'];
 
               if (type == 'localStockAlert') {
                 return _buildLocalStockTile(notification);
-              } else if (type == 'orderAlert') {
+              } else if (type == 'localOrderAlert' || type == 'orderAlert') {
                 return _buildOrderTile(notification);
               } else if (type == 'stockAlert') {
                 return _buildRemoteStockTile(notification);
@@ -168,7 +180,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                       color: Colors.red,
                       size: 50),
                 )
-              : const Icon(Icons.inventory_2, color: Colors.blue, size: 50),
+              : const Icon(Icons.inventory_2, color: Colors.orange, size: 50),
         ),
         title: RichText(
           text: TextSpan(
@@ -182,55 +194,113 @@ class _NotificationScreenState extends State<NotificationScreen> {
             ],
           ),
         ),
-        subtitle: Text(
-          "⚠️ Only ${product['quantity']} left in inventory!",
-          style: const TextStyle(
-              color: Colors.redAccent, fontWeight: FontWeight.w500),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "⚠️ Only ${product['quantity']} left in inventory!",
+              style: const TextStyle(
+                  color: Colors.redAccent, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              product['time'],
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildOrderTile(Map<String, dynamic> data) {
-    final timestamp =
-        (data['timeStamp'] as Timestamp?)?.toDate() ?? DateTime.now();
-    final orderId = data['orderId'] ?? '';
-    final customerName = data['customerName'] ?? '';
-    final total = data['total'] ?? 0;
-    final message = data['message'] ?? 'New order placed!';
+    final orderId = data['order_id'] ?? data['orderId'] ?? '';
+    final customerAddress = data['customer_address'] ?? 'Unknown address';
+    final totalAmount = data['total_amount'] ?? data['total'] ?? 0.0;
+    final time = data['time'] ?? '';
 
-    return ListTile(
-      leading: const Icon(Icons.shopping_cart, color: Colors.green),
-      title: Text('Order from $customerName'),
-      subtitle: Text('$message\nTotal: ₹$total'),
-      trailing: Text(
-        '${timestamp.hour}:${timestamp.minute}',
-        style: const TextStyle(fontSize: 12, color: Colors.grey),
-      ),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => Orderdetailscreen(orderId: orderId),
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12.withOpacity(0.1),
+            blurRadius: 5,
+            spreadRadius: 1,
           ),
-        );
-      },
+        ],
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        leading: const Icon(Icons.shopping_cart, color: Colors.green, size: 40),
+        title: Text(
+          'New Order #$orderId',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '₹${totalAmount.toStringAsFixed(2)} - $customerAddress',
+              style: const TextStyle(color: Colors.black87),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              time,
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ],
+        ),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => Orderdetailscreen(orderId: orderId),
+            ),
+          );
+        },
+      ),
     );
   }
 
   Widget _buildRemoteStockTile(Map<String, dynamic> data) {
-    final timestamp =
-        (data['timeStamp'] as Timestamp?)?.toDate() ?? DateTime.now();
     final productName = data['productName'] ?? '';
     final message = data['message'] ?? '';
+    final time = data['time'] ?? '';
 
-    return ListTile(
-      leading: const Icon(Icons.warning, color: Colors.orange),
-      title: const Text('Stock Alert'),
-      subtitle: Text('$productName\n$message'),
-      trailing: Text(
-        '${timestamp.hour}:${timestamp.minute}',
-        style: const TextStyle(fontSize: 12, color: Colors.grey),
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12.withOpacity(0.1),
+            blurRadius: 5,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        leading: const Icon(Icons.warning, color: Colors.orange, size: 40),
+        title: Text(
+          'Stock Alert: $productName',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(message),
+            const SizedBox(height: 4),
+            Text(
+              time,
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ],
+        ),
       ),
     );
   }

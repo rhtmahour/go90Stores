@@ -1,34 +1,30 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.go90stores">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.go90stores">
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
-    
-    <application
-        android:label="go90stores"
-        android:name="${applicationName}"
-        android:icon="@mipmap/launcher_icon">
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+
+    <application android:label="go90stores" android:name="${applicationName}" android:icon="@mipmap/launcher_icon">
 
         <!-- ✅ Google Maps API Key -->
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyAKnUPS_kKqrK3w5nENjY40tVtsFu5YMsE"/>
+        <meta-data android:name="com.google.android.geo.API_KEY" android:value="AIzaSyAKnUPS_kKqrK3w5nENjY40tVtsFu5YMsE"/>
 
-        <activity
-            android:name=".MainActivity"
-            android:exported="true"
-            android:launchMode="singleTop"
-            android:taskAffinity=""
-            android:theme="@style/LaunchTheme"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
-            android:hardwareAccelerated="true"
-            android:windowSoftInputMode="adjustResize">
-            
-            <meta-data
-                android:name="io.flutter.embedding.android.NormalTheme"
-                android:resource="@style/NormalTheme"
-            />
-            
+        <!-- Firebase Messaging Service -->
+        <service android:name=".MyFirebaseMessagingService" android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <!-- Default Notification Channel -->
+        <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="order_channel" />
+
+        <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTop" android:taskAffinity="" android:theme="@style/LaunchTheme" android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode" android:hardwareAccelerated="true" android:windowSoftInputMode="adjustResize">
+
+            <meta-data android:name="io.flutter.embedding.android.NormalTheme" android:resource="@style/NormalTheme" />
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -36,10 +32,8 @@
         </activity>
 
         <!-- Flutter Plugin Registrant -->
-        <meta-data
-            android:name="flutterEmbedding"
-            android:value="2" />
-            
+        <meta-data android:name="flutterEmbedding" android:value="2" />
+
     </application>
 
     <!-- Queries for PROCESS_TEXT intent -->

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
-import 'package:go90stores/adminlogin.dart';
 import 'package:go90stores/consts.dart';
 import 'package:go90stores/services/notification_service.dart';
+import 'package:go90stores/startpage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:go90stores/cart_provider.dart';
@@ -17,17 +17,17 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ✅ Initialize Firebase FIRST
+  // Initialize Firebase FIRST
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // ✅ Setup Stripe key if not web
+  // Setup Stripe key if not web
   if (!kIsWeb) {
     Stripe.publishableKey = stripePublishableKey;
   }
 
-  // ✅ Setup notification service after Firebase
+  // Setup notification service after Firebase
   await NotificationService.instance.initialize();
 
   runApp(
@@ -63,28 +63,28 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'go90Stores',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.purple,
-          brightness: Brightness.light,
-        ),
-        textTheme: TextTheme(
-          displayLarge: const TextStyle(
-            fontSize: 72,
-            fontWeight: FontWeight.bold,
+        debugShowCheckedModeBanner: false,
+        title: 'go90Stores',
+        theme: ThemeData(
+          useMaterial3: true,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.purple,
+            brightness: Brightness.light,
           ),
-          titleLarge: GoogleFonts.oswald(
-            fontSize: 30,
-            fontStyle: FontStyle.italic,
+          textTheme: TextTheme(
+            displayLarge: const TextStyle(
+              fontSize: 72,
+              fontWeight: FontWeight.bold,
+            ),
+            titleLarge: GoogleFonts.oswald(
+              fontSize: 30,
+              fontStyle: FontStyle.italic,
+            ),
+            bodyMedium: GoogleFonts.merriweather(),
+            displaySmall: GoogleFonts.pacifico(),
           ),
-          bodyMedium: GoogleFonts.merriweather(),
-          displaySmall: GoogleFonts.pacifico(),
         ),
-      ),
-      home: AdminLogin(), // Ensuring compatibility
-    );
+        home: OnboardingPage() // Ensuring compatibility
+        );
   }
 }

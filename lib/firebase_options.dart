@@ -41,54 +41,49 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDRPBTt43zYJn3v7OsEPbnw6WAuL9XhxlE',
-    appId: '1:369820519327:web:9fa2c05414d4029aab0baa',
-    messagingSenderId: '369820519327',
-    projectId: 'go90store',
-    authDomain: 'go90store.firebaseapp.com',
-    databaseURL: 'https://go90store-default-rtdb.firebaseio.com',
-    storageBucket: 'go90store.firebasestorage.app',
-    measurementId: 'G-M6KTQ32W55',
+    apiKey: 'AIzaSyCGuZZbNtXM8WBqQ8435_HfnhXBtG5Dh_4',
+    appId: '1:964177904515:web:108c2aebfb70b4d0c1ecb6',
+    messagingSenderId: '964177904515',
+    projectId: 'go90stores-6583a',
+    authDomain: 'go90stores-6583a.firebaseapp.com',
+    storageBucket: 'go90stores-6583a.firebasestorage.app',
+    measurementId: 'G-9SX1ZQ4VYZ',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDWnhM4KDiq-VKqHaOODXrErORrXdIAuFE',
-    appId: '1:369820519327:android:5b1d7cff03cabbdcab0baa',
-    messagingSenderId: '369820519327',
-    projectId: 'go90store',
-    databaseURL: 'https://go90store-default-rtdb.firebaseio.com',
-    storageBucket: 'go90store.firebasestorage.app',
+    apiKey: 'AIzaSyAssIoHUTK9LqkuB_judYtzsVvsJDwPIQ4',
+    appId: '1:964177904515:android:41f184147f38a7ddc1ecb6',
+    messagingSenderId: '964177904515',
+    projectId: 'go90stores-6583a',
+    storageBucket: 'go90stores-6583a.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCczrU7tEVKPK4GxVDo4btlDrcGv-pjx6M',
-    appId: '1:369820519327:ios:1b81fd521f35f495ab0baa',
-    messagingSenderId: '369820519327',
-    projectId: 'go90store',
-    databaseURL: 'https://go90store-default-rtdb.firebaseio.com',
-    storageBucket: 'go90store.firebasestorage.app',
-    iosBundleId: 'com.example.go90stores',
+    apiKey: 'AIzaSyDqQh_THJXLVfLWcHi9QmutgEvGsdSs4O8',
+    appId: '1:964177904515:ios:6755699f457af8a0c1ecb6',
+    messagingSenderId: '964177904515',
+    projectId: 'go90stores-6583a',
+    storageBucket: 'go90stores-6583a.firebasestorage.app',
+    iosBundleId: 'com.go90stores.in',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyCczrU7tEVKPK4GxVDo4btlDrcGv-pjx6M',
-    appId: '1:369820519327:ios:1b81fd521f35f495ab0baa',
-    messagingSenderId: '369820519327',
-    projectId: 'go90store',
-    databaseURL: 'https://go90store-default-rtdb.firebaseio.com',
-    storageBucket: 'go90store.firebasestorage.app',
+    apiKey: 'AIzaSyDqQh_THJXLVfLWcHi9QmutgEvGsdSs4O8',
+    appId: '1:964177904515:ios:38a504541858aa92c1ecb6',
+    messagingSenderId: '964177904515',
+    projectId: 'go90stores-6583a',
+    storageBucket: 'go90stores-6583a.firebasestorage.app',
     iosBundleId: 'com.example.go90stores',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyDRPBTt43zYJn3v7OsEPbnw6WAuL9XhxlE',
-    appId: '1:369820519327:web:8d2e79b977eb9cafab0baa',
-    messagingSenderId: '369820519327',
-    projectId: 'go90store',
-    authDomain: 'go90store.firebaseapp.com',
-    databaseURL: 'https://go90store-default-rtdb.firebaseio.com',
-    storageBucket: 'go90store.firebasestorage.app',
-    measurementId: 'G-MZ82D6R5MV',
+    apiKey: 'AIzaSyCGuZZbNtXM8WBqQ8435_HfnhXBtG5Dh_4',
+    appId: '1:964177904515:web:4b27ffcd671155bbc1ecb6',
+    messagingSenderId: '964177904515',
+    projectId: 'go90stores-6583a',
+    authDomain: 'go90stores-6583a.firebaseapp.com',
+    storageBucket: 'go90stores-6583a.firebasestorage.app',
+    measurementId: 'G-TLY37PKXS6',
   );
 
 }

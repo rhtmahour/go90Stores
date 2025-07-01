@@ -18,7 +18,8 @@ class OrderPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text('My Orders', style: TextStyle(color: Colors.white)),
+        title: const Text('My Orders',
+            style: TextStyle(color: Color.fromRGBO(255, 255, 255, 1))),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -33,7 +34,6 @@ class OrderPage extends StatelessWidget {
         stream: FirebaseFirestore.instance
             .collection('orders')
             .where('userId', isEqualTo: user.uid)
-            .orderBy('date', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -42,12 +42,14 @@ class OrderPage extends StatelessWidget {
           if (snapshot.hasError) {
             return Center(child: Text("Error: ${snapshot.error}"));
           }
-
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
             return const Center(child: Text("No orders found"));
           }
 
-          final orders = snapshot.data!.docs;
+          // Sort orders by date in descending order locally
+          final orders = snapshot.data!.docs
+            ..sort((a, b) =>
+                (b['date'] as Timestamp).compareTo(a['date'] as Timestamp));
 
           return ListView.builder(
             itemCount: orders.length,

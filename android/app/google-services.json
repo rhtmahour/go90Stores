@@ -1,14 +1,14 @@
 {
   "project_info": {
-    "project_number": "369820519327",
-    "firebase_url": "https://go90store-default-rtdb.firebaseio.com",
-    "project_id": "go90store",
-    "storage_bucket": "go90store.firebasestorage.app"
+    "project_number": "964177904515",
+    "firebase_url": "https://go90stores-6583a-default-rtdb.firebaseio.com",
+    "project_id": "go90stores-6583a",
+    "storage_bucket": "go90stores-6583a.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:369820519327:android:5b1d7cff03cabbdcab0baa",
+        "mobilesdk_app_id": "1:964177904515:android:41f184147f38a7ddc1ecb6",
         "android_client_info": {
           "package_name": "com.go90stores"
         }
@@ -16,7 +16,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDWnhM4KDiq-VKqHaOODXrErORrXdIAuFE"
+          "current_key": "AIzaSyAssIoHUTK9LqkuB_judYtzsVvsJDwPIQ4"
         }
       ],
       "services": {

@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:csv/csv.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go90stores/adminlogin.dart';
@@ -26,6 +28,24 @@ class MyStore extends StatefulWidget {
 
 class MyStoreState extends State<MyStore> {
   final TextEditingController _searchController = TextEditingController();
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  bool _isLoading = false;
+  int lowStockCount = 0;
+  List<Map<String, String>> _products = [];
+
+  List<Map<String, dynamic>> _orderNotifications = [];
+  int _orderNotificationCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _listenForStockUpdates();
+    _listenForOrderNotifications();
+    _setupFirebaseMessaging();
+  }
+
   Future<void> _signOut(BuildContext context) async {
     final bool? confirmLogout = await showDialog<bool>(
       context: context,
@@ -39,7 +59,6 @@ class MyStoreState extends State<MyStore> {
               child: const Text("No"),
             ),
             ElevatedButton(
-              //style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
               onPressed: () async {
                 await _auth.signOut();
                 Navigator.pushAndRemoveUntil(
@@ -56,12 +75,103 @@ class MyStoreState extends State<MyStore> {
     );
   }
 
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  bool _isLoading = false;
-  int lowStockCount = 0;
-  List<Map<String, String>> _products = [];
+  // Add this new method to listen for order notifications
+  void _listenForOrderNotifications() {
+    final storeId = widget.storeId;
+    FirebaseFirestore.instance
+        .collection('stores')
+        .doc(storeId)
+        .collection('notifications')
+        .where('type', isEqualTo: 'new_order')
+        .snapshots()
+        .listen((snapshot) {
+      if (!mounted) return;
+
+      final newNotifications = snapshot.docs.map((doc) {
+        return {
+          'id': doc.id,
+          ...doc.data(),
+          'timestamp': doc.data()['timestamp']?.toDate() ?? DateTime.now(),
+        };
+      }).toList();
+
+      setState(() {
+        _orderNotifications = newNotifications;
+        _orderNotificationCount = newNotifications.length;
+      });
+    });
+  }
+
+  // Add this method to setup Firebase Messaging
+  Future<void> _setupFirebaseMessaging() async {
+    await FirebaseMessaging.instance.subscribeToTopic(widget.storeId);
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      if (message.data['type'] == 'new_order') {
+        _handleNewOrderNotification(message.data);
+      }
+    });
+  }
+
+  void _handleNewOrderNotification(Map<String, dynamic> data) {
+    final orderId = data['order_id'];
+    final customerAddress = data['customer_address'] ?? 'Unknown address';
+    final totalAmount = double.tryParse(data['total_amount'].toString()) ?? 0.0;
+
+    setState(() {
+      _orderNotificationCount++;
+      _orderNotifications.insert(0, {
+        'id': 'push_${DateTime.now().millisecondsSinceEpoch}',
+        'type': 'new_order',
+        'order_id': orderId,
+        'customer_address': customerAddress,
+        'total_amount': totalAmount,
+        'timestamp': DateTime.now(),
+      });
+    });
+
+    _showOrderNotification(
+      orderId: orderId,
+      customerAddress: customerAddress,
+      totalAmount: totalAmount,
+    );
+  }
+
+  Future<void> _showOrderNotification({
+    required String orderId,
+    required String customerAddress,
+    required double totalAmount,
+  }) async {
+    const androidPlatformChannelSpecifics = AndroidNotificationDetails(
+      'order_channel',
+      'Order Notifications',
+      channelDescription: 'Notifications for new orders',
+      importance: Importance.max,
+      priority: Priority.high,
+      showWhen: true,
+      playSound: true,
+      enableVibration: true,
+    );
+
+    const iOSPlatformChannelSpecifics = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    const platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+      iOS: iOSPlatformChannelSpecifics,
+    );
+
+    await flutterLocalNotificationsPlugin.show(
+      orderId.hashCode,
+      'New Order #$orderId',
+      'Amount: ₹${totalAmount.toStringAsFixed(2)} - $customerAddress',
+      platformChannelSpecifics,
+      payload: 'order_$orderId',
+    );
+  }
 
   void _listenForStockUpdates() {
     DatabaseReference storeRef =
@@ -114,38 +224,32 @@ class MyStoreState extends State<MyStore> {
 
   void updateBadgeCount(String productKey, int newStock) {
     setState(() {
-      // Find the product to get the stock alert level
-      var product = _products.firstWhere((p) => p['key'] == productKey,
-          orElse: () => {'stockAlertLevel': '0'});
+      var product = _products.firstWhere(
+        (p) => p['key'] == productKey,
+        orElse: () => {'stockAlertLevel': '0'},
+      );
 
       int alertLevel = int.tryParse(product['stockAlertLevel'] ?? '0') ?? 0;
 
-      // ✅ If stock is now above alert level, remove from badge
       if (newStock >= alertLevel) {
         _products.removeWhere((product) => product['key'] == productKey);
-      }
-      // ✅ If stock is below alert level, ensure it is in the list
-      else if (newStock < alertLevel &&
+      } else if (newStock < alertLevel &&
           !_products.any((p) => p['key'] == productKey)) {
         _products.add({'key': productKey, 'quantity': newStock.toString()});
       }
 
-      lowStockCount = _products.length; // ✅ Keep badge count in sync
+      lowStockCount = _products.length;
     });
   }
 
   Future<void> _showLowStockNotification(
       List<Map<String, dynamic>> lowStockProducts) async {
-    final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-        FlutterLocalNotificationsPlugin();
-
     for (var product in lowStockProducts) {
       final String productName = product['name'] ?? 'Unknown Product';
       final String stockQuantity = product['quantity'] ?? 'N/A';
-      final String imageUrl = product['image'] ?? ''; // ✅ Fetch product image
+      final String imageUrl = product['image'] ?? '';
 
       String? imagePath;
-      // ✅ Download image and save locally if a valid URL exists
       if (imageUrl.isNotEmpty) {
         try {
           final response = await http.get(Uri.parse(imageUrl));
@@ -161,14 +265,13 @@ class MyStoreState extends State<MyStore> {
         }
       }
 
-      // ✅ Android Big Picture Style for notifications
       final BigPictureStyleInformation bigPictureStyle =
           BigPictureStyleInformation(
         imagePath != null
-            ? FilePathAndroidBitmap(imagePath) // ✅ Display downloaded image
-            : const DrawableResourceAndroidBitmap('app_icon'), // Fallback
+            ? FilePathAndroidBitmap(imagePath)
+            : const DrawableResourceAndroidBitmap('app_icon'),
         largeIcon: imagePath != null
-            ? FilePathAndroidBitmap(imagePath) // ✅ Large icon with image
+            ? FilePathAndroidBitmap(imagePath)
             : const DrawableResourceAndroidBitmap('app_icon'),
         contentTitle: "Low Stock Alert: $productName",
         summaryText: "Only $stockQuantity left!",
@@ -182,7 +285,7 @@ class MyStoreState extends State<MyStore> {
         priority: Priority.high,
         playSound: true,
         enableVibration: true,
-        styleInformation: bigPictureStyle, // ✅ Attach Big Picture Style
+        styleInformation: bigPictureStyle,
       );
 
       final NotificationDetails notificationDetails =
@@ -304,12 +407,6 @@ class MyStoreState extends State<MyStore> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    _listenForStockUpdates(); // ✅ Fix: Start listening for stock updates on init
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[200],
@@ -339,10 +436,24 @@ class MyStoreState extends State<MyStore> {
                     MaterialPageRoute(
                       builder: (context) => NotificationScreen(
                         lowStockProducts: _products,
-                        onNotificationDeleted: (int deletedCount) {
+                        orderNotifications: _orderNotifications,
+                        onNotificationDeleted:
+                            (int deletedCount, bool isOrder) {
                           setState(() {
-                            lowStockCount =
-                                0; // ✅ Reset badge count when notifications are cleared
+                            // Reset both counts or handle as needed
+                            _orderNotificationCount = 0;
+                            lowStockCount = 0;
+                            // Optionally, mark notifications as read in Firestore
+                            FirebaseFirestore.instance
+                                .collection('stores')
+                                .doc(widget.storeId)
+                                .collection('notifications')
+                                .get()
+                                .then((snapshot) {
+                              for (var doc in snapshot.docs) {
+                                doc.reference.update({'read': true});
+                              }
+                            });
                           });
                         },
                         storeId: widget.storeId,
@@ -355,7 +466,7 @@ class MyStoreState extends State<MyStore> {
                   children: [
                     const Icon(Icons.notifications,
                         color: Colors.white, size: 28),
-                    if (lowStockCount > 0)
+                    if (lowStockCount + _orderNotificationCount > 0)
                       Positioned(
                         right: -10,
                         top: -10,
@@ -372,7 +483,8 @@ class MyStoreState extends State<MyStore> {
                           ),
                           child: Center(
                             child: Text(
-                              lowStockCount.toString(),
+                              (lowStockCount + _orderNotificationCount)
+                                  .toString(),
                               style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 12,
