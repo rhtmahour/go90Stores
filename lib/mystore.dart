@@ -7,6 +7,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go90stores/adminlogin.dart';
 import 'package:go90stores/bestprice.dart';
 import 'package:go90stores/notificationscreen.dart';
@@ -73,33 +74,6 @@ class MyStoreState extends State<MyStore> {
         );
       },
     );
-  }
-
-  // Add this new method to listen for order notifications
-  void _listenForOrderNotifications() {
-    final storeId = widget.storeId;
-    FirebaseFirestore.instance
-        .collection('stores')
-        .doc(storeId)
-        .collection('notifications')
-        .where('type', isEqualTo: 'new_order')
-        .snapshots()
-        .listen((snapshot) {
-      if (!mounted) return;
-
-      final newNotifications = snapshot.docs.map((doc) {
-        return {
-          'id': doc.id,
-          ...doc.data(),
-          'timestamp': doc.data()['timestamp']?.toDate() ?? DateTime.now(),
-        };
-      }).toList();
-
-      setState(() {
-        _orderNotifications = newNotifications;
-        _orderNotificationCount = newNotifications.length;
-      });
-    });
   }
 
   // Add this method to setup Firebase Messaging
@@ -406,6 +380,66 @@ class MyStoreState extends State<MyStore> {
     );
   }
 
+  // Update _listenForOrderNotifications to include distance calculation
+  void _listenForOrderNotifications() {
+    final storeId = widget.storeId;
+
+    FirebaseFirestore.instance
+        .collection('stores')
+        .doc(storeId)
+        .collection('notifications')
+        .where('type', isEqualTo: 'new_order')
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .listen((snapshot) async {
+      if (!mounted) return;
+
+      // Get store location for distance calculation
+      final storeDoc = await FirebaseFirestore.instance
+          .collection('stores')
+          .doc(storeId)
+          .get();
+      final storeLocation = storeDoc.data()?['location'] as GeoPoint?;
+
+      final newNotifications = await Future.wait(snapshot.docs.map((doc) async {
+        final data = doc.data();
+        double distance = 0;
+
+        if (storeLocation != null &&
+            data['customerLat'] != null &&
+            data['customerLng'] != null) {
+          distance = await Geolocator.distanceBetween(
+            storeLocation.latitude,
+            storeLocation.longitude,
+            (data['customerLat'] as num).toDouble(),
+            (data['customerLng'] as num).toDouble(),
+          );
+        }
+
+        return {
+          'id': doc.id,
+          ...data,
+          'distance': distance,
+          'timestamp': data['timestamp']?.toDate() ?? DateTime.now(),
+        };
+      }));
+
+      // Filter to only show notifications within 500m
+      final filteredNotifications = newNotifications.where((n) {
+        final distance = n['distance'] as double;
+        return distance <= 500;
+      }).toList();
+
+      if (mounted) {
+        setState(() {
+          _orderNotifications = filteredNotifications;
+          _orderNotificationCount =
+              filteredNotifications.where((n) => n['read'] == false).length;
+        });
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -426,85 +460,47 @@ class MyStoreState extends State<MyStore> {
           ),
         ),
         actions: [
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              IconButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => NotificationScreen(
-                        lowStockProducts: _products,
-                        orderNotifications: _orderNotifications,
-                        onNotificationDeleted:
-                            (int deletedCount, bool isOrder) {
-                          setState(() {
-                            // Reset both counts or handle as needed
-                            _orderNotificationCount = 0;
-                            lowStockCount = 0;
-                            // Optionally, mark notifications as read in Firestore
-                            FirebaseFirestore.instance
-                                .collection('stores')
-                                .doc(widget.storeId)
-                                .collection('notifications')
-                                .get()
-                                .then((snapshot) {
-                              for (var doc in snapshot.docs) {
-                                doc.reference.update({'read': true});
-                              }
-                            });
-                          });
-                        },
-                        storeId: widget.storeId,
-                      ),
-                    ),
-                  );
-                },
-                icon: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    const Icon(Icons.notifications,
-                        color: Colors.white, size: 28),
-                    if (lowStockCount + _orderNotificationCount > 0)
-                      Positioned(
-                        right: -10,
-                        top: -10,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: const BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                          ),
-                          constraints: const BoxConstraints(
-                            minWidth: 18,
-                            minHeight: 18,
-                          ),
-                          child: Center(
-                            child: Text(
-                              (lowStockCount + _orderNotificationCount)
-                                  .toString(),
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => NotificationScreen(
+                    lowStockProducts: _products,
+                    orderNotifications: _orderNotifications,
+                    onNotificationDeleted:
+                        (String notificationId, bool isOrder) async {
+                      if (isOrder) {
+                        // Mark order notification as read
+                        await FirebaseFirestore.instance
+                            .collection('stores')
+                            .doc(widget.storeId)
+                            .collection('notifications')
+                            .doc(notificationId)
+                            .update({'read': true});
+
+                        setState(() {
+                          _orderNotificationCount--;
+                        });
+                      }
+                    },
+                    storeId: widget.storeId,
+                  ),
                 ),
-              ),
-            ],
+              );
+            },
+            icon: Badge(
+              label: Text('$_orderNotificationCount'),
+              child: Icon(Icons.notifications, color: Colors.white, size: 28),
+            ),
           ),
           TextButton(
             onPressed: () => _signOut(context),
             child: const Text(
-              "Logout",
+              'Logout',
               style: TextStyle(color: Colors.white),
             ),
-          )
+          ),
         ],
       ),
       drawer: Drawer(

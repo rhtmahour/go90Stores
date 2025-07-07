@@ -1,9 +1,11 @@
-import 'package:cloud_firestore_platform_interface/src/geo_point.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:geoflutterfire_plus/geoflutterfire_plus.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:go90stores/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -118,6 +120,17 @@ class NotificationService {
     }
   }
 
+  // Add this missing method to handle background messages
+  Future<void> _handleBackgroundMessage(RemoteMessage message) async {
+    print('App opened from background notification: ${message.messageId}');
+    await _handleMessage(message);
+
+    // You can add additional navigation logic here based on the message
+    // For example, navigate to a specific screen when notification is tapped
+    // You'll need access to BuildContext for navigation, which might require
+    // passing it from your widget or using a global navigator key
+  }
+
   // Show generic notification
   Future<void> _showGenericNotification(RemoteMessage message) async {
     final notification = message.notification;
@@ -144,43 +157,6 @@ class NotificationService {
         ),
       ),
       payload: message.data.toString(),
-    );
-  }
-
-  // Show order-specific notification
-  Future<void> _showOrderNotification({
-    required String orderId,
-    required String customerAddress,
-    required double totalAmount,
-  }) async {
-    const androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      'order_channel',
-      'Order Notifications',
-      channelDescription: 'Notifications for new orders',
-      importance: Importance.max,
-      priority: Priority.high,
-      showWhen: true,
-      playSound: true,
-      enableVibration: true,
-    );
-
-    const iOSPlatformChannelSpecifics = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-    );
-
-    const platformChannelSpecifics = NotificationDetails(
-      android: androidPlatformChannelSpecifics,
-      iOS: iOSPlatformChannelSpecifics,
-    );
-
-    await _localNotifications.show(
-      orderId.hashCode,
-      'New Order #$orderId',
-      'Amount: \$${totalAmount.toStringAsFixed(2)} - $customerAddress',
-      platformChannelSpecifics,
-      payload: 'order_$orderId',
     );
   }
 
@@ -264,69 +240,67 @@ class NotificationService {
   Future<void> _handleMessage(RemoteMessage message) async {
     print('Handling message: ${message.data}');
 
-    // Handle order notifications
-    if (message.data['type'] == 'new_order') {
-      final orderId = message.data['order_id'] ?? 'N/A';
-      final customerAddress =
-          message.data['customer_address'] ?? 'Unknown address';
-      final totalAmount =
-          double.tryParse(message.data['total_amount'].toString()) ?? 0.0;
+    final userRole = await AuthService().getCurrentUserRole();
 
+    // Handle order notifications for stores
+    if (message.data['type'] == 'new_order' &&
+        userRole == AuthService.storeRole) {
       await _showOrderNotification(
-        orderId: orderId,
-        customerAddress: customerAddress,
-        totalAmount: totalAmount,
+        orderId: message.data['orderId'] ?? 'N/A',
+        customerAddress: 'Nearby location', // You can reverse geocode here
+        totalAmount:
+            double.tryParse(message.data['totalAmount'].toString()) ?? 0.0,
+        customerLat: double.tryParse(message.data['customerLat'].toString()),
+        customerLng: double.tryParse(message.data['customerLng'].toString()),
       );
     }
-    // Handle low stock notifications
-    else if (message.data['type'] == 'low_stock') {
-      // This will be handled by the realtime database listener in MyStore
-    }
-    // Generic notifications
+    // Handle other notification types
     else {
       await _showGenericNotification(message);
     }
   }
 
-  // Handle notification when app is opened from a notification
-  void _handleBackgroundMessage(RemoteMessage message) {
-    print('App opened from notification: ${message.messageId}');
-    // You can add navigation logic here based on the message
-    _handleMessage(message);
+  Future<void> _showOrderNotification({
+    required String orderId,
+    required String customerAddress,
+    required double totalAmount,
+    double? customerLat,
+    double? customerLng,
+  }) async {
+    String distanceInfo = '';
+
+    // Only show notification if within 500m
+    if (customerLat != null && customerLng != null) {
+      final storeLocation = await _getStoreLocation();
+      if (storeLocation != null) {
+        final distanceInMeters = await Geolocator.distanceBetween(
+          storeLocation.latitude,
+          storeLocation.longitude,
+          customerLat,
+          customerLng,
+        );
+
+        // Skip notification if beyond 500m
+        if (distanceInMeters > 500) return;
+
+        distanceInfo = ' (${distanceInMeters.toStringAsFixed(0)}m away)';
+      }
+    }
+
+    // Rest of the notification code...
   }
 
-  // Send order to nearby stores (500m radius)
-  Future<void> sendOrderToNearbyStores({
-    required String orderId,
-    required double customerLat,
-    required double customerLng,
-    required String address,
-    required double amount,
-  }) async {
-    try {
-      final center = GeoFirePoint(
-        GeoPoint(customerLat, customerLng),
-      );
+  Future<GeoPoint?> _getStoreLocation() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return null;
 
-      final response = await http.post(
-        Uri.parse('https://your-api.com/api/orders/notify'),
-        body: json.encode({
-          'order_id': orderId,
-          'center': center.data,
-          'radius': 0.5, // 500m radius
-          'address': address,
-          'amount': amount,
-        }),
-        headers: {'Content-Type': 'application/json'},
-      );
+    final doc = await FirebaseFirestore.instance
+        .collection('stores')
+        .doc(user.uid)
+        .get();
 
-      if (response.statusCode == 200) {
-        print('Order notification sent to nearby stores');
-      } else {
-        print('Failed to notify stores: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Error sending order to nearby stores: $e');
-    }
+    final location = doc.data()?['location'];
+    if (location is GeoPoint) return location;
+    return null;
   }
 }

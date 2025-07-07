@@ -170,7 +170,7 @@ class ProceedToCheckout extends StatelessWidget {
     );
   }
 
-  // Update the _buildCheckoutButton method
+// Update the _buildCheckoutButton method with these improvements:
   Widget _buildCheckoutButton(CartProvider cartProvider, BuildContext context) {
     return Center(
       child: ElevatedButton(
@@ -182,6 +182,15 @@ class ProceedToCheckout extends StatelessWidget {
           ),
         ),
         onPressed: () async {
+          // Verify customer is authenticated
+          final user = FirebaseAuth.instance.currentUser;
+          if (user == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Please login to place an order")),
+            );
+            return;
+          }
+
           if (cartProvider.cartItems.isEmpty) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text("Cart is empty")),
@@ -190,6 +199,87 @@ class ProceedToCheckout extends StatelessWidget {
           }
 
           try {
+            // 1. Check location permissions first
+            bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+            if (!serviceEnabled) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                    content: Text("Please enable location services")),
+              );
+              return;
+            }
+
+            LocationPermission permission = await Geolocator.checkPermission();
+            if (permission == LocationPermission.denied) {
+              permission = await Geolocator.requestPermission();
+              if (permission == LocationPermission.denied) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text("Location permissions are required")),
+                );
+                return;
+              }
+            }
+
+            if (permission == LocationPermission.deniedForever) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                    content:
+                        Text("Location permissions are permanently denied")),
+              );
+              return;
+            }
+
+            // 2. Get customer location with high accuracy
+            final position = await Geolocator.getCurrentPosition(
+              desiredAccuracy: LocationAccuracy.high,
+            );
+
+            // 3. Find nearby stores (within 500m radius)
+            final storesSnapshot = await FirebaseFirestore.instance
+                .collection('stores')
+                .where('location', isNotEqualTo: null)
+                .get();
+
+            List<DocumentSnapshot> nearbyStores = [];
+            List<Future> distanceCalculations = [];
+
+            for (final store in storesSnapshot.docs) {
+              final storeData = store.data() as Map<String, dynamic>;
+              final storeLocation = storeData['location'] as GeoPoint?;
+
+              if (storeLocation != null) {
+                distanceCalculations.add(() async {
+                  try {
+                    final distance = await Geolocator.distanceBetween(
+                      position.latitude,
+                      position.longitude,
+                      storeLocation.latitude,
+                      storeLocation.longitude,
+                    );
+
+                    if (distance <= 500) {
+                      nearbyStores.add(store);
+                    }
+                  } catch (e) {
+                    print(
+                        "Error calculating distance for store ${store.id}: $e");
+                  }
+                }());
+              }
+            }
+
+            await Future.wait(distanceCalculations);
+
+            if (nearbyStores.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                    content: Text("No stores available within 500m")),
+              );
+              return;
+            }
+
+            // 4. Process payment
             final total = cartProvider.getTotalPrice();
             final paymentSuccess =
                 await StripeService.instance.makePayment(total);
@@ -201,104 +291,81 @@ class ProceedToCheckout extends StatelessWidget {
               return;
             }
 
-            final user = FirebaseAuth.instance.currentUser;
-            if (user == null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("User not logged in")),
-              );
-              return;
-            }
-
-            // Get customer location
-            final position = await Geolocator.getCurrentPosition(
-              desiredAccuracy: LocationAccuracy.high,
-            );
-
+            // 5. Create order record
             final orderId = DateTime.now().millisecondsSinceEpoch.toString();
             final orderData = {
               'userId': user.uid,
               'orderId': orderId,
-              'products': cartProvider.cartItems,
+              'products': cartProvider.cartItems
+                  .map((item) => {
+                        'productId': item['key'],
+                        'name': item['name'],
+                        'quantity': item['quantity'],
+                        'price': item['salePrice'],
+                        'image': item['productImage'],
+                      })
+                  .toList(),
               'totalAmount': total,
-              'date': DateTime.now().toIso8601String(),
+              'date': FieldValue.serverTimestamp(),
               'status': 'Pending',
-              'customerLat': position.latitude,
-              'customerLng': position.longitude,
+              'customerLocation':
+                  GeoPoint(position.latitude, position.longitude),
             };
 
-            // Save order to Firestore
             await FirebaseFirestore.instance
                 .collection('orders')
                 .doc(orderId)
                 .set(orderData);
 
-            // Find nearby stores (within 5km radius) using geolocator
-            final nearbyStores = await FirebaseFirestore.instance
-                .collection('stores')
-                .where('location', isNull: false)
-                .get()
-                .then((snapshot) async {
-              List<QueryDocumentSnapshot> nearbyStores = [];
+            // 6. Send notifications to nearby stores
+            final batch = FirebaseFirestore.instance.batch();
 
-              for (final doc in snapshot.docs) {
-                final storeLocation = doc.data()['location'];
-                if (storeLocation == null) continue;
-
-                final storeLat = storeLocation['latitude'];
-                final storeLng = storeLocation['longitude'];
-
-                if (storeLat == null || storeLng == null) continue;
-
-                final distanceInMeters = await Geolocator.distanceBetween(
-                  position.latitude,
-                  position.longitude,
-                  storeLat,
-                  storeLng,
-                );
-
-                // 5km radius (5000 meters)
-                if (distanceInMeters <= 5000) {
-                  nearbyStores.add(doc);
-                }
-              }
-              return nearbyStores;
-            });
-
-            // Send notifications to nearby stores
-            // Update the notification sending part to convert all values to strings
             for (final store in nearbyStores) {
               final storeId = store.id;
-              final timestamp = DateTime.now();
-
-              final notificationData = {
-                'type': 'new_order',
-                'order_id': orderId,
-                'customer_address': 'Current Location',
-                'total_amount': total.toString(), // Convert double to string
-                'timestamp':
-                    timestamp.toIso8601String(), // Convert DateTime to string
-                'read': 'false', // Convert bool to string
-              };
-
-              await FirebaseFirestore.instance
+              final notificationRef = FirebaseFirestore.instance
                   .collection('stores')
                   .doc(storeId)
                   .collection('notifications')
-                  .add({
-                ...notificationData,
-                'timestamp':
-                    FieldValue.serverTimestamp(), // Keep original for Firestore
-              });
+                  .doc();
 
-              // Send push notification with string-only data
-              await FirebaseMessaging.instance.subscribeToTopic(storeId);
+              batch.set(notificationRef, {
+                'type': 'new_order',
+                'orderId': orderId,
+                'customerAddress': 'Nearby location',
+                'totalAmount': total,
+                'timestamp': FieldValue.serverTimestamp(),
+                'read': false,
+                'customerLocation':
+                    GeoPoint(position.latitude, position.longitude),
+                'distance': await Geolocator.distanceBetween(
+                  position.latitude,
+                  position.longitude,
+                  (store.data() as Map<String, dynamic>)['location'].latitude,
+                  (store.data() as Map<String, dynamic>)['location'].longitude,
+                ),
+              });
+            }
+
+            await batch.commit();
+
+            // 7. Send push notifications
+            for (final store in nearbyStores) {
+              final storeId = store.id;
               await FirebaseMessaging.instance.sendMessage(
                 to: '/topics/$storeId',
-                data:
-                    notificationData, // Now properly typed as Map<String, String>
+                data: {
+                  'type': 'new_order',
+                  'order_id': orderId,
+                  'title': 'New Order #$orderId',
+                  'body':
+                      'Amount: ₹${total.toStringAsFixed(2)} - Nearby location',
+                  'customer_lat': position.latitude.toString(),
+                  'customer_lng': position.longitude.toString(),
+                },
               );
             }
 
+            // 8. Clear cart and navigate to order confirmation
             cartProvider.clearCart();
             Navigator.pushReplacement(
               context,
@@ -307,7 +374,7 @@ class ProceedToCheckout extends StatelessWidget {
           } catch (e) {
             print("Checkout Error: $e");
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Something went wrong: ${e.toString()}")),
+              SnackBar(content: Text("Error: ${e.toString()}")),
             );
           }
         },
