@@ -573,7 +573,34 @@ class MyStoreState extends State<MyStore> {
                 'Notifications',
                 style: TextStyle(fontWeight: FontWeight.w500),
               ),
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => NotificationScreen(
+                      lowStockProducts: _products,
+                      orderNotifications: _orderNotifications,
+                      onNotificationDeleted:
+                          (String notificationId, bool isOrder) async {
+                        if (isOrder) {
+                          // Mark order notification as read
+                          await FirebaseFirestore.instance
+                              .collection('stores')
+                              .doc(widget.storeId)
+                              .collection('notifications')
+                              .doc(notificationId)
+                              .update({'read': true});
+
+                          setState(() {
+                            _orderNotificationCount--;
+                          });
+                        }
+                      },
+                      storeId: widget.storeId,
+                    ),
+                  ),
+                );
+              },
             ),
             Divider(),
             ListTile(
