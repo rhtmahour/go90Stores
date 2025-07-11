@@ -287,12 +287,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
                   ),
                 ],
               ),
-              trailing: IconButton(
-                icon: const Icon(Icons.inventory),
-                onPressed: () {
-                  // Navigate to product restock screen
-                },
-              ),
             ),
           ),
         );
