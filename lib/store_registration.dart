@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -14,8 +15,11 @@ class StoreRegistration extends StatefulWidget {
 class _StoreRegistrationState extends State<StoreRegistration> {
   final _formKey = GlobalKey<FormState>();
   File? _storeImage;
+  String? _verificationId;
+  String _statusMessage = '';
   final TextEditingController _storeNameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _otpController = TextEditingController();
   final TextEditingController _storeAddressController = TextEditingController();
   final TextEditingController _aadharController = TextEditingController();
   final TextEditingController _gstController = TextEditingController();
@@ -64,6 +68,73 @@ class _StoreRegistrationState extends State<StoreRegistration> {
         SnackBar(content: Text('Error: $error')),
       );
     }
+  }
+
+  Future<void> _verifyPhoneNumber() async {
+    String phoneNumber = '+91${_phoneController.text}';
+
+    await FirebaseAuth.instance.verifyPhoneNumber(
+      phoneNumber: phoneNumber,
+      timeout: const Duration(seconds: 60),
+      verificationCompleted: (PhoneAuthCredential credential) async {
+        // Auto-resolved (optional)
+      },
+      verificationFailed: (FirebaseAuthException e) {
+        setState(() {
+          _statusMessage = 'Verification failed: ${e.message}';
+        });
+      },
+      codeSent: (String verificationId, int? resendToken) {
+        _verificationId = verificationId;
+        _showOtpDialog();
+      },
+      codeAutoRetrievalTimeout: (String verificationId) {
+        _verificationId = verificationId;
+      },
+    );
+  }
+
+  void _showOtpDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Enter OTP"),
+        content: TextField(
+          controller: _otpController,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            labelText: 'OTP',
+          ),
+        ),
+        actions: [
+          TextButton(
+            child: const Text("Verify"),
+            onPressed: () async {
+              final otp = _otpController.text.trim();
+
+              try {
+                PhoneAuthCredential credential = PhoneAuthProvider.credential(
+                  verificationId: _verificationId!,
+                  smsCode: otp,
+                );
+
+                await FirebaseAuth.instance.signInWithCredential(credential);
+
+                setState(() {
+                  _statusMessage = '✅ Phone Number Verified Successfully!';
+                });
+
+                Navigator.of(context).pop();
+              } catch (e) {
+                setState(() {
+                  _statusMessage = '❌ Incorrect OTP. Please try again.';
+                });
+              }
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -119,16 +190,35 @@ class _StoreRegistrationState extends State<StoreRegistration> {
                       labelText: 'Phone Number',
                       border: OutlineInputBorder(),
                     ),
-                    keyboardType: TextInputType.number,
+                    keyboardType: TextInputType.phone,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter Phone number';
+                        return 'Please enter phone number';
                       }
                       if (value.length != 10) {
-                        return 'phone number must be 10 digits';
+                        return 'Phone number must be 10 digits';
                       }
                       return null;
                     },
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        _verifyPhoneNumber();
+                      }
+                    },
+                    child: const Text('Verify'),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    _statusMessage,
+                    style: TextStyle(
+                      color: _statusMessage.contains("✅")
+                          ? Colors.green
+                          : Colors.red,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 20),
                   TextFormField(
