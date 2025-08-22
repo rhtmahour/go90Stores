@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
@@ -13,8 +14,11 @@ class LowestPurchasePriceReport extends StatefulWidget {
 }
 
 class _LowestPurchasePriceReportState extends State<LowestPurchasePriceReport> {
-  final DatabaseReference databaseRef = FirebaseDatabase.instance
-      .refFromURL("https://go90store-default-rtdb.firebaseio.com/products");
+  final DatabaseReference databaseRef = FirebaseDatabase.instanceFor(
+    app: Firebase.app(),
+    databaseURL:
+        "https://go90stores-6583a-default-rtdb.asia-southeast1.firebasedatabase.app",
+  ).ref("products");
 
   bool _isLoading = false;
   String _statusMessage = '';
