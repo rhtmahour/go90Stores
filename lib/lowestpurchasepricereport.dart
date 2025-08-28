@@ -16,8 +16,7 @@ class LowestPurchasePriceReport extends StatefulWidget {
 class _LowestPurchasePriceReportState extends State<LowestPurchasePriceReport> {
   final DatabaseReference databaseRef = FirebaseDatabase.instanceFor(
     app: Firebase.app(),
-    databaseURL:
-        "https://go90stores-6583a-default-rtdb.asia-southeast1.firebasedatabase.app",
+    databaseURL: "https://go90stores-6583a-default-rtdb.firebaseio.com/",
   ).ref("products");
 
   bool _isLoading = false;
