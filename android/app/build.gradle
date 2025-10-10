@@ -1,55 +1,100 @@
-plugins {
-    id "com.android.application"
-    // START: FlutterFire Configuration
-    id 'com.google.gms.google-services'
-    // END: FlutterFire Configuration
-    id "kotlin-android"
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
-    id "dev.flutter.flutter-gradle-plugin"
-}
-dependencies {
-    // Import the BoM for the Firebase platform
-    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
-    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
+// android/app/build.gradle
 
-    // Add the dependency for the Realtime Database library
-    // When using the BoM, you don't specify versions in Firebase library dependencies
-    implementation("com.google.firebase:firebase-database")
+import java.util.Properties
+import java.io.FileInputStream
+
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+    id 'com.google.gms.google-services'
+    id 'dev.flutter.flutter-gradle-plugin'
 }
 
 android {
-    namespace = "com.go90stores"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    compileSdkVersion 36  // ← CHANGED FROM 34 TO 36
+
+    namespace "com.go90stores"
+
+    defaultConfig {
+        applicationId "com.go90stores"
+        minSdkVersion flutter.minSdkVersion
+        targetSdkVersion 36  // ← CHANGED FROM 34 TO 36
+        versionCode 2
+        versionName "1.0.0"
+        multiDexEnabled true
+    }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
         coreLibraryDesugaringEnabled true
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
+        jvmTarget = "1.8"
     }
 
-    defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.go90stores"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdkVersion flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+    // Load key properties from android/key.properties
+    def keystoreProperties = new Properties()
+    def keystorePropertiesFile = rootProject.file('key.properties')
+
+    if (keystorePropertiesFile.exists()) {
+        keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+    }
+
+    signingConfigs {
+        release {
+            if (keystorePropertiesFile.exists()) {
+                def rawStoreFile = keystoreProperties.getProperty('storeFile')
+                if (rawStoreFile != null && rawStoreFile.trim().length() > 0) {
+                    def safePath = rawStoreFile.replace('\\', '/')
+                    storeFile file(safePath)
+                }
+                def sp = keystoreProperties.getProperty('storePassword')
+                if (sp != null) storePassword sp
+
+                def ka = keystoreProperties.getProperty('keyAlias')
+                if (ka != null) keyAlias ka
+
+                def kp = keystoreProperties.getProperty('keyPassword')
+                if (kp != null) keyPassword kp
+            }
+        }
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.debug
+            try {
+                if (signingConfigs.release.storeFile != null) {
+                    signingConfig signingConfigs.release
+                }
+            } catch (ignored) {}
+            minifyEnabled false
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug { }
+    }
+    buildTypes {
+        release {
+
+            // Enables code-related app optimization.
+            minifyEnabled true
+
+            // Enables resource shrinking.
+            shrinkResources true
+
+            // Default file with automatically generated optimization rules.
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt')
         }
     }
+}
+
+dependencies {
+    implementation platform("com.google.firebase:firebase-bom:33.7.0")
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
+    implementation 'androidx.multidex:multidex:2.0.1'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22"
 }
 
 flutter {
